@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Aqua User &amp; License Manager</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: system-ui, sans-serif; margin: 0; background: #f4f5f7; color: #1a1a1a; }
+  header { background: #17324d; color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
+  header h1 { font-size: 16px; margin: 0; }
+  header .who { font-size: 13px; opacity: 0.85; }
+  main { padding: 20px; }
+  .hidden { display: none !important; }
+
+  #login-view { max-width: 340px; margin: 60px auto; background: #fff; padding: 28px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+  #login-view h2 { margin-top: 0; font-size: 18px; }
+  label { display: block; font-size: 13px; margin: 12px 0 4px; color: #444; }
+  input[type=text], input[type=password], input[type=email], input[type=date], select {
+    width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
+  }
+  button { cursor: pointer; border: none; border-radius: 4px; padding: 8px 14px; font-size: 13px; background: #17324d; color: #fff; }
+  button.secondary { background: #6c757d; }
+  button.danger { background: #c0392b; }
+  button:disabled { opacity: 0.5; cursor: default; }
+  button + button { margin-left: 8px; }
+
+  .toolbar { margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
+  .toolbar .spacer { flex: 1; }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 13px; }
+  th { background: #eef1f4; position: sticky; top: 0; }
+  tr.selected { background: #dbe9ff; }
+  tr:hover { background: #f0f6ff; cursor: pointer; }
+
+  .status-active { color: #1a7f37; font-weight: 600; }
+  .status-bad { color: #c0392b; font-weight: 600; }
+
+  #error-banner {
+    background: #fdecea; color: #7a1c1c; border: 1px solid #f4b8b3; border-radius: 6px;
+    padding: 10px 14px; margin-bottom: 14px; font-size: 13px; white-space: pre-wrap;
+  }
+  #status-line { margin-top: 10px; font-size: 12px; color: #666; }
+
+  dialog { border: none; border-radius: 8px; padding: 0; width: 420px; max-width: 90vw; }
+  dialog::backdrop { background: rgba(0,0,0,0.4); }
+  .dialog-body { padding: 20px; }
+  .dialog-body h3 { margin-top: 0; }
+  .checkbox-row { display: flex; gap: 16px; align-items: center; margin-top: 6px; }
+  .checkbox-row label { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: #1a1a1a; }
+  .dialog-actions { margin-top: 18px; text-align: right; }
+  .field-error { color: #c0392b; font-size: 12px; min-height: 16px; margin-top: 8px; }
+  .date-row { display: flex; gap: 10px; align-items: center; }
+  .date-row input[type=date] { flex: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Aqua User &amp; License Manager</h1>
+  <div class="who" id="who-line"></div>
+</header>
+
+<main>
+
+  <section id="login-view">
+    <h2>Log in</h2>
+    <label for="login-username">Username</label>
+    <input type="text" id="login-username" autocomplete="username">
+    <label for="login-password">Password</label>
+    <input type="password" id="login-password" autocomplete="current-password">
+    <div class="field-error" id="login-error"></div>
+    <button id="login-button" style="width:100%; margin-top:10px;">Log In</button>
+  </section>
+
+  <section id="dashboard-view" class="hidden">
+    <div id="error-banner" class="hidden"></div>
+
+    <div class="toolbar">
+      <button id="add-btn">Add User</button>
+      <button id="edit-btn" class="secondary" disabled>Edit</button>
+      <button id="renew-btn" class="secondary" disabled>Renew License</button>
+      <button id="delete-btn" class="danger" disabled>Delete</button>
+      <div class="spacer"></div>
+      <button id="refresh-btn" class="secondary">Refresh</button>
+      <button id="logout-btn" class="secondary">Logout</button>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th><th>Full Name</th><th>Email</th><th>Admin</th>
+          <th>Permissions</th><th>License Type</th><th>Expiry</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="user-table-body"></tbody>
+    </table>
+
+    <div id="status-line"></div>
+  </section>
+
+</main>
+
+<dialog id="user-dialog">
+  <div class="dialog-body">
+    <h3 id="user-dialog-title">Add User</h3>
+    <label for="uf-username">Username</label>
+    <input type="text" id="uf-username">
+    <label id="uf-password-label" for="uf-password">Password</label>
+    <input type="password" id="uf-password">
+    <label for="uf-fullname">Full name</label>
+    <input type="text" id="uf-fullname">
+    <label for="uf-email">Email</label>
+    <input type="email" id="uf-email">
+    <label>Permissions</label>
+    <div class="checkbox-row">
+      <label><input type="checkbox" id="uf-perm-access"> Access</label>
+      <label><input type="checkbox" id="uf-perm-modify"> Modify</label>
+      <label><input type="checkbox" id="uf-perm-approve"> Approve</label>
+    </div>
+    <div class="checkbox-row">
+      <label><input type="checkbox" id="uf-admin"> Admin (can manage users in this tool)</label>
+    </div>
+    <div class="checkbox-row hidden" id="uf-enabled-row">
+      <label><input type="checkbox" id="uf-enabled"> Enabled</label>
+    </div>
+    <div id="uf-license-fields">
+      <label for="uf-license-type">License type</label>
+      <select id="uf-license-type">
+        <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
+      </select>
+      <label>Expiry date</label>
+      <div class="date-row">
+        <input type="date" id="uf-expiry">
+        <label style="white-space:nowrap;"><input type="checkbox" id="uf-never-expires"> Never expires</label>
+      </div>
+    </div>
+    <div class="field-error" id="user-dialog-error"></div>
+    <div class="dialog-actions">
+      <button class="secondary" id="user-dialog-cancel">Cancel</button>
+      <button id="user-dialog-save">Save</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="renew-dialog">
+  <div class="dialog-body">
+    <h3 id="renew-dialog-title">Renew License</h3>
+    <label for="rf-license-type">License type</label>
+    <select id="rf-license-type">
+      <option>TRIAL</option><option>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
+    </select>
+    <label>Expiry date</label>
+    <div class="date-row">
+      <input type="date" id="rf-expiry">
+      <label style="white-space:nowrap;"><input type="checkbox" id="rf-never-expires"> Never expires</label>
+    </div>
+    <div class="checkbox-row">
+      <label><input type="checkbox" id="rf-revoke"> Revoke this license (blocks login immediately)</label>
+    </div>
+    <div class="field-error" id="renew-dialog-error"></div>
+    <div class="dialog-actions">
+      <button class="secondary" id="renew-dialog-cancel">Cancel</button>
+      <button id="renew-dialog-save">Save</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  let token = null;
+  let currentUser = null;
+  let users = [];
+  let selectedId = null;
+
+  const $ = (id) => document.getElementById(id);
+
+  async function api(method, path, body) {
+    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    const res = await fetch(path, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
+    let payload = null;
+    const text = await res.text();
+    if (text) {
+      try { payload = JSON.parse(text); } catch (e) { payload = text; }
+    }
+    if (!res.ok) {
+      const message = (payload && payload.message) ? payload.message : (typeof payload === 'string' ? payload : res.statusText);
+      const err = new Error(`[HTTP ${res.status}] ${message}`);
+      err.status = res.status;
+      err.body = payload;
+      console.error('API error:', method, path, 'status=', res.status, 'body=', payload);
+      throw err;
+    }
+    return payload;
+  }
+
+  function showError(err) {
+    const banner = $('error-banner');
+    banner.textContent = err.message || String(err);
+    banner.classList.remove('hidden');
+  }
+  function clearError() {
+    $('error-banner').classList.add('hidden');
+    $('error-banner').textContent = '';
+  }
+
+  // ---- Login ----
+  $('login-button').addEventListener('click', async () => {
+    const username = $('login-username').value.trim();
+    const password = $('login-password').value;
+    $('login-error').textContent = '';
+    if (!username || !password) {
+      $('login-error').textContent = 'Please enter a username and password.';
+      return;
+    }
+    $('login-button').disabled = true;
+    try {
+      const resp = await api('POST', '/api/auth/login', { username, password });
+      if (!resp.user.admin) {
+        $('login-error').textContent = 'This account is not authorized to manage users and licenses.';
+        return;
+      }
+      token = resp.token;
+      currentUser = resp.user;
+      $('login-view').classList.add('hidden');
+      $('dashboard-view').classList.remove('hidden');
+      $('who-line').textContent = 'Signed in as ' + currentUser.username + ' (admin)';
+      await refresh();
+    } catch (e) {
+      $('login-error').textContent = e.message;
+    } finally {
+      $('login-button').disabled = false;
+    }
+  });
+
+  $('logout-btn').addEventListener('click', () => {
+    token = null;
+    currentUser = null;
+    users = [];
+    selectedId = null;
+    $('dashboard-view').classList.add('hidden');
+    $('login-view').classList.remove('hidden');
+    $('who-line').textContent = '';
+    $('login-username').value = '';
+    $('login-password').value = '';
+  });
+
+  // ---- Table ----
+  function renderTable() {
+    const body = $('user-table-body');
+    body.innerHTML = '';
+    for (const u of users) {
+      const tr = document.createElement('tr');
+      tr.dataset.id = u.id;
+      if (u.id === selectedId) tr.classList.add('selected');
+
+      let status, statusClass;
+      if (!u.enabled) { status = 'Disabled'; statusClass = 'status-bad'; }
+      else if (u.licenseValid) { status = 'Active'; statusClass = 'status-active'; }
+      else { status = 'License ' + (u.licenseStatus || 'invalid'); statusClass = 'status-bad'; }
+
+      tr.innerHTML = `
+        <td>${escapeHtml(u.username)}</td>
+        <td>${escapeHtml(u.fullName || '')}</td>
+        <td>${escapeHtml(u.email || '')}</td>
+        <td>${u.admin ? 'Yes' : 'No'}</td>
+        <td>${(u.permissions || []).join(', ')}</td>
+        <td>${u.licenseType || ''}</td>
+        <td>${u.expiryDate || 'Never'}</td>
+        <td class="${statusClass}">${status}</td>
+      `;
+      tr.addEventListener('click', () => {
+        selectedId = u.id;
+        renderTable();
+        updateToolbarState();
+      });
+      body.appendChild(tr);
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function updateToolbarState() {
+    const has = selectedId !== null;
+    $('edit-btn').disabled = !has;
+    $('renew-btn').disabled = !has;
+    $('delete-btn').disabled = !has;
+  }
+
+  function selectedUser() {
+    return users.find(u => u.id === selectedId) || null;
+  }
+
+  async function refresh() {
+    clearError();
+    $('status-line').textContent = 'Loading...';
+    try {
+      users = await api('GET', '/api/users');
+      if (selectedId !== null && !users.some(u => u.id === selectedId)) selectedId = null;
+      renderTable();
+      updateToolbarState();
+      $('status-line').textContent = users.length + ' user(s)';
+    } catch (e) {
+      showError(e);
+      $('status-line').textContent = '';
+    }
+  }
+
+  $('refresh-btn').addEventListener('click', refresh);
+
+  // ---- Add / Edit dialog ----
+  const userDialog = $('user-dialog');
+  let userDialogMode = 'create';
+
+  function openUserDialog(mode, user) {
+    userDialogMode = mode;
+    $('user-dialog-error').textContent = '';
+    $('user-dialog-title').textContent = mode === 'create' ? 'Add User' : 'Edit User';
+    $('uf-password-label').textContent = mode === 'create' ? 'Password' : 'New password (leave blank to keep)';
+    $('uf-password').value = '';
+
+    if (mode === 'edit' && user) {
+      $('uf-username').value = user.username;
+      $('uf-username').disabled = true;
+      $('uf-fullname').value = user.fullName || '';
+      $('uf-email').value = user.email || '';
+      $('uf-admin').checked = !!user.admin;
+      $('uf-perm-access').checked = (user.permissions || []).includes('ACCESS');
+      $('uf-perm-modify').checked = (user.permissions || []).includes('MODIFY');
+      $('uf-perm-approve').checked = (user.permissions || []).includes('APPROVE');
+      $('uf-enabled-row').classList.remove('hidden');
+      $('uf-enabled').checked = !!user.enabled;
+      $('uf-license-fields').classList.add('hidden');
+    } else {
+      $('uf-username').value = '';
+      $('uf-username').disabled = false;
+      $('uf-fullname').value = '';
+      $('uf-email').value = '';
+      $('uf-admin').checked = false;
+      $('uf-perm-access').checked = false;
+      $('uf-perm-modify').checked = false;
+      $('uf-perm-approve').checked = false;
+      $('uf-enabled-row').classList.add('hidden');
+      $('uf-license-fields').classList.remove('hidden');
+      $('uf-license-type').value = 'STANDARD';
+      $('uf-never-expires').checked = false;
+      const d = new Date();
+      d.setFullYear(d.getFullYear() + 1);
+      $('uf-expiry').value = d.toISOString().slice(0, 10);
+    }
+    userDialog.showModal();
+  }
+
+  $('add-btn').addEventListener('click', () => openUserDialog('create', null));
+  $('edit-btn').addEventListener('click', () => {
+    const u = selectedUser();
+    if (u) openUserDialog('edit', u);
+  });
+  $('user-dialog-cancel').addEventListener('click', () => userDialog.close());
+
+  $('uf-never-expires').addEventListener('change', (e) => {
+    $('uf-expiry').disabled = e.target.checked;
+  });
+
+  $('user-dialog-save').addEventListener('click', async () => {
+    const username = $('uf-username').value.trim();
+    const password = $('uf-password').value;
+    $('user-dialog-error').textContent = '';
+    if (!username) { $('user-dialog-error').textContent = 'Username is required.'; return; }
+    if (userDialogMode === 'create' && !password) { $('user-dialog-error').textContent = 'Password is required.'; return; }
+
+    const permissions = [];
+    if ($('uf-perm-access').checked) permissions.push('ACCESS');
+    if ($('uf-perm-modify').checked) permissions.push('MODIFY');
+    if ($('uf-perm-approve').checked) permissions.push('APPROVE');
+
+    $('user-dialog-save').disabled = true;
+    try {
+      if (userDialogMode === 'create') {
+        const payload = {
+          username,
+          password,
+          fullName: $('uf-fullname').value,
+          email: $('uf-email').value,
+          admin: $('uf-admin').checked,
+          permissions,
+          licenseType: $('uf-license-type').value,
+          expiryDate: $('uf-never-expires').checked ? null : $('uf-expiry').value,
+        };
+        const created = await api('POST', '/api/users', payload);
+        userDialog.close();
+        $('status-line').textContent = 'Created user ' + created.username;
+      } else {
+        const u = selectedUser();
+        const payload = {
+          fullName: $('uf-fullname').value,
+          email: $('uf-email').value,
+          enabled: $('uf-enabled').checked,
+          admin: $('uf-admin').checked,
+          permissions,
+          newPassword: password || null,
+        };
+        const updated = await api('PUT', '/api/users/' + u.id, payload);
+        userDialog.close();
+        $('status-line').textContent = 'Updated user ' + updated.username;
+      }
+      await refresh();
+    } catch (e) {
+      $('user-dialog-error').textContent = e.message;
+    } finally {
+      $('user-dialog-save').disabled = false;
+    }
+  });
+
+  // ---- Delete ----
+  $('delete-btn').addEventListener('click', async () => {
+    const u = selectedUser();
+    if (!u) return;
+    if (!confirm(`Delete user '${u.username}' and revoke their license? This cannot be undone.`)) return;
+    clearError();
+    try {
+      await api('DELETE', '/api/users/' + u.id);
+      $('status-line').textContent = 'Deleted user ' + u.username;
+      selectedId = null;
+      await refresh();
+    } catch (e) {
+      showError(e);
+    }
+  });
+
+  // ---- Renew license dialog ----
+  const renewDialog = $('renew-dialog');
+
+  $('renew-btn').addEventListener('click', () => {
+    const u = selectedUser();
+    if (!u) return;
+    $('renew-dialog-error').textContent = '';
+    $('renew-dialog-title').textContent = 'Renew License - ' + u.username;
+    $('rf-license-type').value = u.licenseType || 'STANDARD';
+    $('rf-revoke').checked = false;
+    if (!u.expiryDate) {
+      $('rf-never-expires').checked = true;
+      $('rf-expiry').disabled = true;
+      $('rf-expiry').value = '';
+    } else {
+      $('rf-never-expires').checked = false;
+      $('rf-expiry').disabled = false;
+      $('rf-expiry').value = u.expiryDate;
+    }
+    renewDialog.showModal();
+  });
+  $('renew-dialog-cancel').addEventListener('click', () => renewDialog.close());
+  $('rf-never-expires').addEventListener('change', (e) => {
+    $('rf-expiry').disabled = e.target.checked;
+  });
+
+  $('renew-dialog-save').addEventListener('click', async () => {
+    const u = selectedUser();
+    if (!u) return;
+    const payload = {
+      licenseType: $('rf-license-type').value,
+      expiryDate: $('rf-never-expires').checked ? null : $('rf-expiry').value,
+      revoke: $('rf-revoke').checked,
+    };
+    $('renew-dialog-save').disabled = true;
+    try {
+      const updated = await api('POST', '/api/users/' + u.id + '/license/renew', payload);
+      renewDialog.close();
+      $('status-line').textContent = 'Updated license for ' + updated.username;
+      await refresh();
+    } catch (e) {
+      $('renew-dialog-error').textContent = e.message;
+    } finally {
+      $('renew-dialog-save').disabled = false;
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.vassarlabs.aulm</groupId>
+    <artifactId>aqua-user-license-manager-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Aqua User License Manager</name>
+    <description>Standalone user/license management app: add users, grant Access/Modify/Approve permissions, issue and validate licenses.</description>
+
+    <modules>
+        <module>backend</module>
+        <!-- desktop-ui temporarily disabled: web UI (backend/src/main/resources/static) is the active front-end for now -->
+        <!-- <module>desktop-ui</module> -->
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <java.version>21</java.version>
+    </properties>
+</project>
