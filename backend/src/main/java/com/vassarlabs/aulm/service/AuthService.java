@@ -25,20 +25,26 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username or password"));
+        User user = userRepository.findByUsernameAndProjectName(request.username(), request.projectName())
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username, project or password"));
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username or password");
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username, project or password");
         }
         if (!user.isEnabled()) {
             throw new ApiException(HttpStatus.FORBIDDEN, "This account has been disabled");
         }
-        if (user.getLicense() == null || !user.getLicense().isValid()) {
-            throw new ApiException(HttpStatus.FORBIDDEN, "No active license for this account. Contact your administrator.");
-        }
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        return issueTokenFor(user);
+    }
+
+    /**
+     * License validity is intentionally not checked here: any enabled account can log in.
+     * Whether a user has a valid license only determines what they can see/do afterward
+     * (e.g. an unlicensed user lands on a "request access" screen instead of the dashboard).
+     */
+    public LoginResponse issueTokenFor(User user) {
+        String token = jwtUtil.generateToken(user.getUuid());
         return new LoginResponse(token, UserResponse.from(user));
     }
 }

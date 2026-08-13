@@ -5,7 +5,6 @@ import com.vassarlabs.aulm.model.PermissionType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-import java.time.LocalDate;
 import java.util.Set;
 
 public record CreateUserRequest(
@@ -16,6 +15,6 @@ public record CreateUserRequest(
         boolean admin,
         Set<PermissionType> permissions,
         @NotNull LicenseType licenseType,
-        LocalDate expiryDate
+        @NotBlank String projectName
 ) {
 }

@@ -7,6 +7,7 @@ import java.util.Set;
 public record UpdateUserRequest(
         String fullName,
         String email,
+        String projectName,
         Boolean enabled,
         Boolean admin,
         Set<PermissionType> permissions,

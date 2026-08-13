@@ -3,14 +3,17 @@
 
 CREATE TABLE IF NOT EXISTS app_users (
     id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    uuid           UUID         NOT NULL DEFAULT gen_random_uuid(),
     username       VARCHAR(255) NOT NULL,
     password_hash  VARCHAR(255) NOT NULL,
     full_name      VARCHAR(255),
     email          VARCHAR(255),
+    project_name   VARCHAR(255) NOT NULL,
     enabled        BOOLEAN      NOT NULL DEFAULT TRUE,
     admin          BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at     TIMESTAMP    NOT NULL DEFAULT now(),
-    CONSTRAINT uk_app_users_username UNIQUE (username)
+    CONSTRAINT uk_app_users_username_project UNIQUE (username, project_name),
+    CONSTRAINT uk_app_users_uuid UNIQUE (uuid)
 );
 
 CREATE TABLE IF NOT EXISTS licenses (
@@ -36,5 +39,43 @@ CREATE TABLE IF NOT EXISTS user_permissions (
     CONSTRAINT fk_user_permissions_user FOREIGN KEY (user_id) REFERENCES app_users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS access_requests (
+    id                     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_id                BIGINT       NOT NULL,
+    request_type           VARCHAR(32)  NOT NULL,
+    status                 VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
+    requested_license_type VARCHAR(32),
+    note                   VARCHAR(1000),
+    resolution_note        VARCHAR(1000),
+    created_at             TIMESTAMP    NOT NULL DEFAULT now(),
+    resolved_at            TIMESTAMP,
+    CONSTRAINT ck_access_requests_type CHECK (request_type IN ('REGISTRATION', 'RENEWAL', 'PERMISSION_CHANGE')),
+    CONSTRAINT ck_access_requests_status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+    CONSTRAINT ck_access_requests_license_type CHECK (requested_license_type IS NULL OR requested_license_type IN ('TRIAL', 'STANDARD', 'PREMIUM', 'ADMIN')),
+    CONSTRAINT fk_access_requests_user FOREIGN KEY (user_id) REFERENCES app_users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS access_request_permissions (
+    access_request_id  BIGINT      NOT NULL,
+    permission          VARCHAR(32) NOT NULL,
+    CONSTRAINT pk_access_request_permissions PRIMARY KEY (access_request_id, permission),
+    CONSTRAINT ck_access_request_permissions_permission CHECK (permission IN ('ACCESS', 'MODIFY', 'APPROVE')),
+    CONSTRAINT fk_access_request_permissions_request FOREIGN KEY (access_request_id) REFERENCES access_requests (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id          BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    token       VARCHAR(255) NOT NULL,
+    user_id     BIGINT       NOT NULL,
+    expires_at  TIMESTAMP    NOT NULL,
+    used        BOOLEAN      NOT NULL DEFAULT FALSE,
+    created_at  TIMESTAMP    NOT NULL DEFAULT now(),
+    CONSTRAINT uk_password_reset_tokens_token UNIQUE (token),
+    CONSTRAINT fk_password_reset_tokens_user FOREIGN KEY (user_id) REFERENCES app_users (id) ON DELETE CASCADE
+);
+
 CREATE INDEX IF NOT EXISTS idx_licenses_user_id ON licenses (user_id);
 CREATE INDEX IF NOT EXISTS idx_user_permissions_user_id ON user_permissions (user_id);
+CREATE INDEX IF NOT EXISTS idx_access_requests_user_id ON access_requests (user_id);
+CREATE INDEX IF NOT EXISTS idx_access_requests_status ON access_requests (status);
+CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id ON password_reset_tokens (user_id);

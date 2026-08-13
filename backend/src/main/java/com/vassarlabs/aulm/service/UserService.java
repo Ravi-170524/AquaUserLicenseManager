@@ -40,8 +40,8 @@ public class UserService {
     }
 
     public User createUser(CreateUserRequest request) {
-        if (userRepository.existsByUsername(request.username())) {
-            throw new ApiException(HttpStatus.CONFLICT, "Username already exists");
+        if (userRepository.existsByUsernameAndProjectName(request.username(), request.projectName())) {
+            throw new ApiException(HttpStatus.CONFLICT, "This username already exists for this project");
         }
 
         User user = new User();
@@ -49,6 +49,7 @@ public class UserService {
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFullName(request.fullName());
         user.setEmail(request.email());
+        user.setProjectName(request.projectName());
         user.setAdmin(request.admin());
         user.setPermissions(request.permissions() == null || request.permissions().isEmpty()
                 ? EnumSet.noneOf(com.vassarlabs.aulm.model.PermissionType.class)
@@ -59,7 +60,7 @@ public class UserService {
         license.setLicenseType(request.licenseType());
         license.setStatus(LicenseStatus.ACTIVE);
         license.setIssuedDate(LocalDate.now());
-        license.setExpiryDate(request.expiryDate());
+        license.setExpiryDate(request.licenseType().computeExpiryDate(LocalDate.now()));
         user.setLicense(license);
 
         return userRepository.save(user);
@@ -72,6 +73,16 @@ public class UserService {
         }
         if (request.email() != null) {
             user.setEmail(request.email());
+        }
+        if (request.projectName() != null) {
+            if (request.projectName().isBlank()) {
+                throw new ApiException(HttpStatus.BAD_REQUEST, "Project name cannot be blank");
+            }
+            if (!request.projectName().equals(user.getProjectName())
+                    && userRepository.existsByUsernameAndProjectName(user.getUsername(), request.projectName())) {
+                throw new ApiException(HttpStatus.CONFLICT, "This username already exists for this project");
+            }
+            user.setProjectName(request.projectName());
         }
         if (request.enabled() != null) {
             user.setEnabled(request.enabled());
@@ -105,7 +116,7 @@ public class UserService {
             throw new ApiException(HttpStatus.NOT_FOUND, "User has no license to renew");
         }
         license.setLicenseType(request.licenseType());
-        license.setExpiryDate(request.expiryDate());
+        license.setExpiryDate(request.licenseType().computeExpiryDate(LocalDate.now()));
         license.setStatus(request.revoke() ? LicenseStatus.REVOKED : LicenseStatus.ACTIVE);
         return userRepository.save(user);
     }

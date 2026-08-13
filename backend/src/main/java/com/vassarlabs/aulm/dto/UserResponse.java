@@ -7,12 +7,15 @@ import com.vassarlabs.aulm.model.User;
 
 import java.time.LocalDate;
 import java.util.Set;
+import java.util.UUID;
 
 public class UserResponse {
     private Long id;
+    private UUID uuid;
     private String username;
     private String fullName;
     private String email;
+    private String projectName;
     private boolean enabled;
     private boolean admin;
     private Set<PermissionType> permissions;
@@ -26,9 +29,11 @@ public class UserResponse {
     public static UserResponse from(User user) {
         UserResponse dto = new UserResponse();
         dto.id = user.getId();
+        dto.uuid = user.getUuid();
         dto.username = user.getUsername();
         dto.fullName = user.getFullName();
         dto.email = user.getEmail();
+        dto.projectName = user.getProjectName();
         dto.enabled = user.isEnabled();
         dto.admin = user.isAdmin();
         dto.permissions = user.getPermissions();
@@ -47,6 +52,10 @@ public class UserResponse {
         return id;
     }
 
+    public UUID getUuid() {
+        return uuid;
+    }
+
     public String getUsername() {
         return username;
     }
@@ -57,6 +66,10 @@ public class UserResponse {
 
     public String getEmail() {
         return email;
+    }
+
+    public String getProjectName() {
+        return projectName;
     }
 
     public boolean isEnabled() {

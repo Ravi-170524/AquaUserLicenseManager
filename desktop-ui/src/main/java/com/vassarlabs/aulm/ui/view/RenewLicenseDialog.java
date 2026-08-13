@@ -25,6 +25,7 @@ public class RenewLicenseDialog {
     private final DatePicker expiryDatePicker = new DatePicker();
     private final CheckBox neverExpiresCheckBox = new CheckBox("Never expires");
     private final CheckBox revokeCheckBox = new CheckBox("Revoke this license (blocks login immediately)");
+    private final Label errorLabel = new Label();
 
     public RenewLicenseDialog(Stage owner, UserDto user) {
         dialogStage = new Stage();
@@ -42,6 +43,7 @@ public class RenewLicenseDialog {
             expiryDatePicker.setValue(user.getExpiryDate());
         }
         neverExpiresCheckBox.selectedProperty().addListener((obs, old, isSelected) -> expiryDatePicker.setDisable(isSelected));
+        restrictToTodayOrLater(expiryDatePicker);
 
         GridPane grid = new GridPane();
         grid.setHgap(10);
@@ -53,14 +55,14 @@ public class RenewLicenseDialog {
         grid.addRow(row++, new Label("Expiry date"), new HBox(10, expiryDatePicker, neverExpiresCheckBox));
         grid.add(revokeCheckBox, 0, row++, 2, 1);
 
+        errorLabel.setStyle("-fx-text-fill: #c0392b;");
+        grid.add(errorLabel, 0, row++, 2, 1);
+
         Button saveButton = new Button("Save");
         Button cancelButton = new Button("Cancel");
         saveButton.setDefaultButton(true);
         cancelButton.setCancelButton(true);
-        saveButton.setOnAction(e -> {
-            confirmed = true;
-            dialogStage.close();
-        });
+        saveButton.setOnAction(e -> onSave());
         cancelButton.setOnAction(e -> dialogStage.close());
 
         HBox buttons = new HBox(10, saveButton, cancelButton);
@@ -68,6 +70,32 @@ public class RenewLicenseDialog {
         grid.add(buttons, 0, row, 2, 1);
 
         dialogStage.setScene(new Scene(grid));
+    }
+
+    private void onSave() {
+        if (!neverExpiresCheckBox.isSelected()) {
+            LocalDate expiry = expiryDatePicker.getValue();
+            if (expiry == null || expiry.isBefore(LocalDate.now())) {
+                errorLabel.setText("Expiry date cannot be in the past.");
+                return;
+            }
+        }
+        confirmed = true;
+        dialogStage.close();
+    }
+
+    /** Greys out and blocks selection of any day before today. */
+    private static void restrictToTodayOrLater(DatePicker picker) {
+        picker.setDayCellFactory(dp -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                if (date != null && date.isBefore(LocalDate.now())) {
+                    setDisable(true);
+                    setStyle("-fx-background-color: #eeeeee;");
+                }
+            }
+        });
     }
 
     public Optional<RenewLicensePayload> showAndWait() {

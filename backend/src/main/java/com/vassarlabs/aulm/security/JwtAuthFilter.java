@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -40,11 +41,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             String token = header.substring(7);
             if (jwtUtil.isValid(token)) {
-                String username = jwtUtil.extractUsername(token);
-                Optional<User> userOpt = userRepository.findByUsername(username);
+                UUID userUuid = jwtUtil.extractUserUuid(token);
+                Optional<User> userOpt = userRepository.findByUuid(userUuid);
                 if (userOpt.isPresent() && SecurityContextHolder.getContext().getAuthentication() == null) {
                     User user = userOpt.get();
-                    if (user.isEnabled() && user.getLicense() != null && user.getLicense().isValid()) {
+                    if (user.isEnabled()) {
                         List<GrantedAuthority> authorities = new ArrayList<>();
                         if (user.isAdmin()) {
                             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));

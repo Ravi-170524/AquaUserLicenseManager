@@ -88,6 +88,9 @@ public class UserListView {
         TableColumn<UserDto, String> emailCol = new TableColumn<>("Email");
         emailCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEmail()));
 
+        TableColumn<UserDto, String> projectNameCol = new TableColumn<>("Project");
+        projectNameCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getProjectName()));
+
         TableColumn<UserDto, String> adminCol = new TableColumn<>("Admin");
         adminCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().isAdmin() ? "Yes" : "No"));
 
@@ -115,7 +118,7 @@ public class UserListView {
             return new SimpleStringProperty(status);
         });
 
-        table.getColumns().addAll(List.of(usernameCol, fullNameCol, emailCol, adminCol, permissionsCol,
+        table.getColumns().addAll(List.of(usernameCol, fullNameCol, emailCol, projectNameCol, adminCol, permissionsCol,
                 licenseTypeCol, expiryCol, statusCol));
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
     }

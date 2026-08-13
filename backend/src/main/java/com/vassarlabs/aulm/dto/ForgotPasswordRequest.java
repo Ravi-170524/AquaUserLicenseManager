@@ -2,9 +2,8 @@ package com.vassarlabs.aulm.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public record LoginRequest(
+public record ForgotPasswordRequest(
         @NotBlank String username,
-        @NotBlank String projectName,
-        @NotBlank String password
+        @NotBlank String projectName
 ) {
 }

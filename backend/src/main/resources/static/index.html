@@ -4,54 +4,118 @@
 <meta charset="utf-8">
 <title>Aqua User &amp; License Manager</title>
 <style>
-  :root { color-scheme: light dark; }
-  body { font-family: system-ui, sans-serif; margin: 0; background: #f4f5f7; color: #1a1a1a; }
-  header { background: #17324d; color: #fff; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
-  header h1 { font-size: 16px; margin: 0; }
+  :root {
+    color-scheme: light;
+    --navy: #17324d;
+    --navy-dark: #102438;
+    --navy-light: #23496b;
+    --bg: #f2f4f7;
+    --card: #ffffff;
+    --border: #e3e7ed;
+    --text: #1a2029;
+    --text-muted: #6b7382;
+    --green-bg: #e6f6ea; --green-fg: #1a7f37;
+    --red-bg: #fdecea; --red-fg: #c0392b;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(20, 30, 45, 0.06), 0 4px 14px rgba(20, 30, 45, 0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0; background: var(--bg); color: var(--text); line-height: 1.45;
+  }
+
+  header {
+    background: linear-gradient(180deg, var(--navy-light), var(--navy));
+    color: #fff; padding: 16px 28px; display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  header h1 { font-size: 17px; margin: 0; font-weight: 600; letter-spacing: 0.2px; }
   header .who { font-size: 13px; opacity: 0.85; }
-  main { padding: 20px; }
+
+  main { padding: 28px; max-width: 1180px; margin: 0 auto; }
   .hidden { display: none !important; }
 
-  #login-view { max-width: 340px; margin: 60px auto; background: #fff; padding: 28px; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
-  #login-view h2 { margin-top: 0; font-size: 18px; }
-  label { display: block; font-size: 13px; margin: 12px 0 4px; color: #444; }
-  input[type=text], input[type=password], input[type=email], input[type=date], select {
-    width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;
+  #login-view {
+    max-width: 360px; width: 100%; margin: 0 auto; margin-top: min(12vh, 100px);
+    background: var(--card); padding: 32px 30px; border-radius: var(--radius); box-shadow: var(--shadow);
+    border: 1px solid var(--border);
   }
-  button { cursor: pointer; border: none; border-radius: 4px; padding: 8px 14px; font-size: 13px; background: #17324d; color: #fff; }
-  button.secondary { background: #6c757d; }
-  button.danger { background: #c0392b; }
-  button:disabled { opacity: 0.5; cursor: default; }
+  #login-view h2 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+
+  label { display: block; font-size: 12.5px; font-weight: 600; margin: 14px 0 5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  input[type=text], input[type=password], input[type=email], input[type=date], select {
+    width: 100%; padding: 9px 11px; box-sizing: border-box; border: 1px solid var(--border);
+    border-radius: 7px; font-size: 14px; color: var(--text); background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus, select:focus {
+    outline: none; border-color: var(--navy-light); box-shadow: 0 0 0 3px rgba(35, 73, 107, 0.15);
+  }
+
+  button {
+    cursor: pointer; border: none; border-radius: 7px; padding: 9px 16px; font-size: 13.5px;
+    font-weight: 600; background: var(--navy); color: #fff; transition: background 0.15s, transform 0.05s;
+  }
+  button:hover:not(:disabled) { background: var(--navy-light); }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  button.secondary { background: #eef0f3; color: var(--text); }
+  button.secondary:hover:not(:disabled) { background: #e2e6eb; }
+  button.danger { background: var(--red-fg); }
+  button.danger:hover:not(:disabled) { background: #a52f22; }
+  button:disabled { opacity: 0.45; cursor: default; }
   button + button { margin-left: 8px; }
 
-  .toolbar { margin-bottom: 14px; display: flex; gap: 8px; align-items: center; }
+  .toolbar { margin-bottom: 18px; display: flex; gap: 8px; align-items: center; }
   .toolbar .spacer { flex: 1; }
 
-  table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #eee; font-size: 13px; }
-  th { background: #eef1f4; position: sticky; top: 0; }
-  tr.selected { background: #dbe9ff; }
-  tr:hover { background: #f0f6ff; cursor: pointer; }
+  .table-card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 11px 14px; font-size: 13.5px; }
+  th {
+    background: #f7f8fa; color: var(--text-muted); font-weight: 600; font-size: 11.5px;
+    text-transform: uppercase; letter-spacing: 0.4px; position: sticky; top: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tr.selected { background: #e8f0fb; }
+  tr:hover { background: #f4f7fb; cursor: pointer; }
 
-  .status-active { color: #1a7f37; font-weight: 600; }
-  .status-bad { color: #c0392b; font-weight: 600; }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  }
+  .status-active { background: var(--green-bg); color: var(--green-fg); }
+  .status-bad { background: var(--red-bg); color: var(--red-fg); }
 
   #error-banner {
-    background: #fdecea; color: #7a1c1c; border: 1px solid #f4b8b3; border-radius: 6px;
-    padding: 10px 14px; margin-bottom: 14px; font-size: 13px; white-space: pre-wrap;
+    background: var(--red-bg); color: #7a1c1c; border: 1px solid #f4b8b3; border-radius: var(--radius);
+    padding: 12px 16px; margin-bottom: 16px; font-size: 13px; white-space: pre-wrap;
   }
-  #status-line { margin-top: 10px; font-size: 12px; color: #666; }
+  #status-line { margin-top: 12px; font-size: 12.5px; color: var(--text-muted); }
 
-  dialog { border: none; border-radius: 8px; padding: 0; width: 420px; max-width: 90vw; }
-  dialog::backdrop { background: rgba(0,0,0,0.4); }
-  .dialog-body { padding: 20px; }
-  .dialog-body h3 { margin-top: 0; }
-  .checkbox-row { display: flex; gap: 16px; align-items: center; margin-top: 6px; }
-  .checkbox-row label { display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; color: #1a1a1a; }
-  .dialog-actions { margin-top: 18px; text-align: right; }
-  .field-error { color: #c0392b; font-size: 12px; min-height: 16px; margin-top: 8px; }
-  .date-row { display: flex; gap: 10px; align-items: center; }
-  .date-row input[type=date] { flex: 1; }
+  dialog {
+    border: none; border-radius: var(--radius); padding: 0; width: 440px; max-width: 90vw;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+  }
+  dialog::backdrop { background: rgba(15, 23, 35, 0.5); }
+  .dialog-body { padding: 26px 28px; }
+  .dialog-body h3 { margin: 0 0 18px; font-size: 17px; font-weight: 600; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+  .checkbox-row { display: flex; gap: 18px; align-items: center; margin-top: 8px; flex-wrap: wrap; }
+  .checkbox-row label {
+    display: flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 500;
+    color: var(--text); text-transform: none; letter-spacing: 0;
+  }
+  .checkbox-row input[type=checkbox] { width: auto; accent-color: var(--navy); }
+  .dialog-actions { margin-top: 22px; text-align: right; }
+  .field-error { color: var(--red-fg); font-size: 12.5px; min-height: 16px; margin-top: 10px; }
+  .required::after { content: " *"; color: var(--red-fg); }
+  .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; margin-bottom: 4px; text-transform: none; font-weight: 400; }
+  a { color: var(--navy-light); text-decoration: none; font-weight: 600; }
+  a:hover { text-decoration: underline; }
+  .auth-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
+  .status-panel { background: var(--card); padding: 30px 32px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); }
+  .pending-note { margin-top: 16px; padding: 12px 14px; background: #fff8e6; border: 1px solid #f0d896; border-radius: 8px; font-size: 13px; color: #6b4f10; }
 </style>
 </head>
 <body>
@@ -67,10 +131,96 @@
     <h2>Log in</h2>
     <label for="login-username">Username</label>
     <input type="text" id="login-username" autocomplete="username">
+    <label for="login-project">Project name</label>
+    <input type="text" id="login-project">
     <label for="login-password">Password</label>
     <input type="password" id="login-password" autocomplete="current-password">
     <div class="field-error" id="login-error"></div>
     <button id="login-button" style="width:100%; margin-top:10px;">Log In</button>
+    <div class="auth-switch">New here? <a href="#" id="show-register-link">Register</a></div>
+    <div class="auth-switch"><a href="#" id="show-forgot-link">Forgot password?</a></div>
+  </section>
+
+  <section id="forgot-password-view" class="hidden">
+    <h2>Forgot Password</h2>
+    <label class="required" for="fp-username">Username</label>
+    <input type="text" id="fp-username" autocomplete="username">
+    <label class="required" for="fp-project">Project name</label>
+    <input type="text" id="fp-project">
+    <div class="form-hint">If an account matches and has an email on file, we'll send a reset link to it.</div>
+    <div class="field-error" id="forgot-password-error"></div>
+    <button id="forgot-password-button" style="width:100%; margin-top:10px;">Send Reset Link</button>
+    <div class="auth-switch"><a href="#" id="show-login-from-forgot-link">Back to login</a></div>
+  </section>
+
+  <section id="reset-password-view" class="hidden">
+    <h2>Reset Password</h2>
+    <label class="required" for="rp-new-password">New password</label>
+    <input type="password" id="rp-new-password" autocomplete="new-password">
+    <label class="required" for="rp-confirm-password">Confirm new password</label>
+    <input type="password" id="rp-confirm-password" autocomplete="new-password">
+    <div class="field-error" id="reset-password-error"></div>
+    <button id="reset-password-button" style="width:100%; margin-top:10px;">Reset Password</button>
+    <div class="auth-switch"><a href="#" id="show-login-from-reset-link">Back to login</a></div>
+  </section>
+
+  <section id="register-view" class="hidden">
+    <h2>Register</h2>
+    <div class="form-hint" style="margin-top:-12px;"><span style="color:var(--red-fg);">*</span> required</div>
+    <label class="required" for="reg-username">Username</label>
+    <input type="text" id="reg-username" autocomplete="username">
+    <label class="required" for="reg-project">Project name</label>
+    <input type="text" id="reg-project">
+    <label class="required" for="reg-password">Password</label>
+    <input type="password" id="reg-password" autocomplete="new-password">
+    <label for="reg-fullname">Full name</label>
+    <input type="text" id="reg-fullname">
+    <label for="reg-email">Email</label>
+    <input type="email" id="reg-email">
+    <label for="reg-license-type">Requested license type</label>
+    <select id="reg-license-type">
+      <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
+    </select>
+    <label for="reg-note">Note to admin (optional)</label>
+    <input type="text" id="reg-note" placeholder="e.g. reason for access">
+    <div class="field-error" id="register-error"></div>
+    <button id="register-button" style="width:100%; margin-top:10px;">Register</button>
+    <div class="auth-switch">Already have an account? <a href="#" id="show-login-link">Log in</a></div>
+  </section>
+
+  <section id="my-access-view" class="hidden" style="max-width:420px; margin:0 auto; margin-top: min(10vh, 90px);">
+    <div class="status-panel">
+      <h2 style="margin:0 0 16px; font-size:20px; font-weight:600;">My Access</h2>
+      <div id="my-access-status"></div>
+      <div id="my-access-request-section" class="hidden" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+        <label for="ma-request-type">Request type</label>
+        <select id="ma-request-type">
+          <option value="RENEWAL">Request / renew license</option>
+          <option value="PERMISSION_CHANGE">Request permission change</option>
+        </select>
+        <div id="ma-license-fields">
+          <label for="ma-license-type">Requested license type</label>
+          <select id="ma-license-type">
+            <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
+          </select>
+          <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never.</div>
+        </div>
+        <div id="ma-permission-fields" class="hidden">
+          <label>Requested permissions</label>
+          <div class="checkbox-row">
+            <label><input type="checkbox" id="ma-perm-access"> Access</label>
+            <label><input type="checkbox" id="ma-perm-modify"> Modify</label>
+            <label><input type="checkbox" id="ma-perm-approve"> Approve</label>
+          </div>
+        </div>
+        <label for="ma-note">Note (optional)</label>
+        <input type="text" id="ma-note">
+        <div class="field-error" id="my-access-error"></div>
+        <button id="my-access-submit" style="width:100%; margin-top:10px;">Submit Request</button>
+      </div>
+      <button class="secondary" id="my-access-refresh" style="width:100%; margin-top:16px;">Refresh Status</button>
+      <button class="secondary" id="my-access-logout" style="width:100%; margin-top:8px;">Logout</button>
+    </div>
   </section>
 
   <section id="dashboard-view" class="hidden">
@@ -81,20 +231,27 @@
       <button id="edit-btn" class="secondary" disabled>Edit</button>
       <button id="renew-btn" class="secondary" disabled>Renew License</button>
       <button id="delete-btn" class="danger" disabled>Delete</button>
+      <button id="requests-btn" class="secondary">Pending Requests</button>
       <div class="spacer"></div>
       <button id="refresh-btn" class="secondary">Refresh</button>
       <button id="logout-btn" class="secondary">Logout</button>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Username</th><th>Full Name</th><th>Email</th><th>Admin</th>
-          <th>Permissions</th><th>License Type</th><th>Expiry</th><th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="user-table-body"></tbody>
-    </table>
+    <div style="font-size:12.5px; color:var(--text-muted); margin-bottom:8px;">
+      Click a row to select a user, then use Edit / Renew License / Delete above (e.g. to change a password, select the user and click Edit).
+    </div>
+
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Username</th><th>Full Name</th><th>Email</th><th>Project</th><th>Admin</th>
+            <th>Permissions</th><th>License Type</th><th>Expiry</th><th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="user-table-body"></tbody>
+      </table>
+    </div>
 
     <div id="status-line"></div>
   </section>
@@ -104,14 +261,17 @@
 <dialog id="user-dialog">
   <div class="dialog-body">
     <h3 id="user-dialog-title">Add User</h3>
-    <label for="uf-username">Username</label>
+    <div class="form-hint" style="margin-top:-12px;"><span style="color:var(--red-fg);">*</span> required</div>
+    <label class="required" for="uf-username">Username</label>
     <input type="text" id="uf-username">
-    <label id="uf-password-label" for="uf-password">Password</label>
+    <label id="uf-password-label" class="required" for="uf-password">Password</label>
     <input type="password" id="uf-password">
     <label for="uf-fullname">Full name</label>
     <input type="text" id="uf-fullname">
     <label for="uf-email">Email</label>
     <input type="email" id="uf-email">
+    <label class="required" for="uf-project">Project name</label>
+    <input type="text" id="uf-project">
     <label>Permissions</label>
     <div class="checkbox-row">
       <label><input type="checkbox" id="uf-perm-access"> Access</label>
@@ -125,15 +285,11 @@
       <label><input type="checkbox" id="uf-enabled"> Enabled</label>
     </div>
     <div id="uf-license-fields">
-      <label for="uf-license-type">License type</label>
+      <label class="required" for="uf-license-type">License type</label>
       <select id="uf-license-type">
         <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
       </select>
-      <label>Expiry date</label>
-      <div class="date-row">
-        <input type="date" id="uf-expiry">
-        <label style="white-space:nowrap;"><input type="checkbox" id="uf-never-expires"> Never expires</label>
-      </div>
+      <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never.</div>
     </div>
     <div class="field-error" id="user-dialog-error"></div>
     <div class="dialog-actions">
@@ -150,11 +306,7 @@
     <select id="rf-license-type">
       <option>TRIAL</option><option>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
     </select>
-    <label>Expiry date</label>
-    <div class="date-row">
-      <input type="date" id="rf-expiry">
-      <label style="white-space:nowrap;"><input type="checkbox" id="rf-never-expires"> Never expires</label>
-    </div>
+    <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never.</div>
     <div class="checkbox-row">
       <label><input type="checkbox" id="rf-revoke"> Revoke this license (blocks login immediately)</label>
     </div>
@@ -162,6 +314,60 @@
     <div class="dialog-actions">
       <button class="secondary" id="renew-dialog-cancel">Cancel</button>
       <button id="renew-dialog-save">Save</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="requests-dialog" style="width:780px;">
+  <div class="dialog-body">
+    <h3>Pending Requests</h3>
+    <div class="table-card" style="margin-bottom:10px;">
+      <table>
+        <thead>
+          <tr><th>Username</th><th>Project</th><th>Type</th><th>Requested</th><th>Note</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="requests-table-body"></tbody>
+      </table>
+    </div>
+    <div id="requests-empty" class="hidden" style="text-align:center; color:var(--text-muted); padding:24px; font-size:13px;">No pending requests.</div>
+    <div class="dialog-actions">
+      <button class="secondary" id="requests-dialog-close">Close</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="approve-request-dialog">
+  <div class="dialog-body">
+    <h3>Approve Request</h3>
+    <div id="approve-license-fields">
+      <label class="required" for="ar-license-type">License type</label>
+      <select id="ar-license-type">
+        <option>TRIAL</option><option>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
+      </select>
+      <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never.</div>
+    </div>
+    <label>Permissions</label>
+    <div class="checkbox-row">
+      <label><input type="checkbox" id="ar-perm-access"> Access</label>
+      <label><input type="checkbox" id="ar-perm-modify"> Modify</label>
+      <label><input type="checkbox" id="ar-perm-approve"> Approve</label>
+    </div>
+    <div class="field-error" id="approve-request-error"></div>
+    <div class="dialog-actions">
+      <button class="secondary" id="approve-request-cancel">Cancel</button>
+      <button id="approve-request-save">Approve</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="reject-request-dialog">
+  <div class="dialog-body">
+    <h3>Reject Request</h3>
+    <label for="rr-reason">Reason (optional)</label>
+    <input type="text" id="rr-reason">
+    <div class="dialog-actions">
+      <button class="secondary" id="reject-request-cancel">Cancel</button>
+      <button class="danger" id="reject-request-save">Reject</button>
     </div>
   </div>
 </dialog>
@@ -209,28 +415,63 @@
     $('error-banner').textContent = '';
   }
 
+  // ---- View switching ----
+  function hideAllViews() {
+    $('login-view').classList.add('hidden');
+    $('register-view').classList.add('hidden');
+    $('forgot-password-view').classList.add('hidden');
+    $('reset-password-view').classList.add('hidden');
+    $('my-access-view').classList.add('hidden');
+    $('dashboard-view').classList.add('hidden');
+  }
+
+  function showLoginView() {
+    hideAllViews();
+    $('login-view').classList.remove('hidden');
+  }
+
+  function doLogout() {
+    token = null;
+    currentUser = null;
+    myRequests = [];
+    users = [];
+    selectedId = null;
+    showLoginView();
+    $('who-line').textContent = '';
+    $('login-username').value = '';
+    $('login-project').value = '';
+    $('login-password').value = '';
+  }
+
+  async function enterAsCurrentUser() {
+    hideAllViews();
+    if (currentUser.admin) {
+      $('dashboard-view').classList.remove('hidden');
+      $('who-line').textContent = 'Signed in as ' + currentUser.username + ' (admin)';
+      await refresh();
+    } else {
+      $('who-line').textContent = 'Signed in as ' + currentUser.username;
+      await showMyAccess();
+    }
+  }
+
   // ---- Login ----
   $('login-button').addEventListener('click', async () => {
     const username = $('login-username').value.trim();
+    const projectName = $('login-project').value.trim();
     const password = $('login-password').value;
+    $('login-error').style.color = '';
     $('login-error').textContent = '';
-    if (!username || !password) {
-      $('login-error').textContent = 'Please enter a username and password.';
+    if (!username || !projectName || !password) {
+      $('login-error').textContent = 'Please enter a username, project name and password.';
       return;
     }
     $('login-button').disabled = true;
     try {
-      const resp = await api('POST', '/api/auth/login', { username, password });
-      if (!resp.user.admin) {
-        $('login-error').textContent = 'This account is not authorized to manage users and licenses.';
-        return;
-      }
+      const resp = await api('POST', '/api/auth/login', { username, projectName, password });
       token = resp.token;
       currentUser = resp.user;
-      $('login-view').classList.add('hidden');
-      $('dashboard-view').classList.remove('hidden');
-      $('who-line').textContent = 'Signed in as ' + currentUser.username + ' (admin)';
-      await refresh();
+      await enterAsCurrentUser();
     } catch (e) {
       $('login-error').textContent = e.message;
     } finally {
@@ -238,16 +479,217 @@
     }
   });
 
-  $('logout-btn').addEventListener('click', () => {
-    token = null;
-    currentUser = null;
-    users = [];
-    selectedId = null;
-    $('dashboard-view').classList.add('hidden');
-    $('login-view').classList.remove('hidden');
-    $('who-line').textContent = '';
-    $('login-username').value = '';
-    $('login-password').value = '';
+  $('logout-btn').addEventListener('click', doLogout);
+  $('my-access-logout').addEventListener('click', doLogout);
+
+  // ---- Register ----
+  $('show-register-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    $('register-error').textContent = '';
+    $('login-view').classList.add('hidden');
+    $('register-view').classList.remove('hidden');
+  });
+  $('show-login-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    $('login-error').textContent = '';
+    showLoginView();
+  });
+
+  // ---- Forgot / reset password ----
+  $('show-forgot-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    $('forgot-password-error').textContent = '';
+    $('fp-username').value = '';
+    $('fp-project').value = '';
+    hideAllViews();
+    $('forgot-password-view').classList.remove('hidden');
+  });
+  $('show-login-from-forgot-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    showLoginView();
+  });
+  $('show-login-from-reset-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    showLoginView();
+  });
+
+  $('forgot-password-button').addEventListener('click', async () => {
+    const username = $('fp-username').value.trim();
+    const projectName = $('fp-project').value.trim();
+    $('forgot-password-error').textContent = '';
+    if (!username || !projectName) {
+      $('forgot-password-error').textContent = 'Username and project name are required.';
+      return;
+    }
+    $('forgot-password-button').disabled = true;
+    try {
+      await api('POST', '/api/auth/forgot-password', { username, projectName });
+      $('forgot-password-error').style.color = 'var(--green-fg)';
+      $('forgot-password-error').textContent = 'If that account exists and has an email on file, a reset link has been sent.';
+    } catch (e) {
+      $('forgot-password-error').style.color = 'var(--red-fg)';
+      $('forgot-password-error').textContent = e.message;
+    } finally {
+      $('forgot-password-button').disabled = false;
+    }
+  });
+
+  let resetToken = null;
+
+  function checkForResetTokenInUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('resetToken');
+    if (t) {
+      resetToken = t;
+      history.replaceState(null, '', window.location.pathname);
+      hideAllViews();
+      $('reset-password-error').textContent = '';
+      $('rp-new-password').value = '';
+      $('rp-confirm-password').value = '';
+      $('reset-password-view').classList.remove('hidden');
+    }
+  }
+
+  $('reset-password-button').addEventListener('click', async () => {
+    $('reset-password-error').textContent = '';
+    const newPassword = $('rp-new-password').value;
+    const confirmPassword = $('rp-confirm-password').value;
+    if (!newPassword) {
+      $('reset-password-error').textContent = 'New password is required.';
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      $('reset-password-error').textContent = 'Passwords do not match.';
+      return;
+    }
+    $('reset-password-button').disabled = true;
+    try {
+      await api('POST', '/api/auth/reset-password', { token: resetToken, newPassword });
+      resetToken = null;
+      showLoginView();
+      $('login-error').style.color = 'var(--green-fg)';
+      $('login-error').textContent = 'Password reset. You can now log in.';
+    } catch (e) {
+      $('reset-password-error').textContent = e.message;
+    } finally {
+      $('reset-password-button').disabled = false;
+    }
+  });
+
+  $('register-button').addEventListener('click', async () => {
+    const username = $('reg-username').value.trim();
+    const projectName = $('reg-project').value.trim();
+    const password = $('reg-password').value;
+    $('register-error').textContent = '';
+    if (!username || !projectName || !password) {
+      $('register-error').textContent = 'Username, project name and password are required.';
+      return;
+    }
+    $('register-button').disabled = true;
+    try {
+      const payload = {
+        username,
+        password,
+        projectName,
+        fullName: $('reg-fullname').value,
+        email: $('reg-email').value,
+        requestedLicenseType: $('reg-license-type').value,
+        note: $('reg-note').value,
+      };
+      const resp = await api('POST', '/api/auth/register', payload);
+      token = resp.token;
+      currentUser = resp.user;
+      await enterAsCurrentUser();
+    } catch (e) {
+      $('register-error').textContent = e.message;
+    } finally {
+      $('register-button').disabled = false;
+    }
+  });
+
+  // ---- My Access (non-admin) ----
+  let myRequests = [];
+
+  function updateMaFieldsVisibility() {
+    const type = $('ma-request-type').value;
+    $('ma-license-fields').classList.toggle('hidden', type !== 'RENEWAL');
+    $('ma-permission-fields').classList.toggle('hidden', type !== 'PERMISSION_CHANGE');
+  }
+  $('ma-request-type').addEventListener('change', updateMaFieldsVisibility);
+
+  async function showMyAccess() {
+    $('my-access-view').classList.remove('hidden');
+    $('my-access-error').textContent = '';
+    $('my-access-status').innerHTML = 'Loading...';
+    try {
+      myRequests = await api('GET', '/api/access-requests/mine');
+      renderMyAccessStatus();
+    } catch (e) {
+      $('my-access-status').innerHTML = '';
+      $('my-access-error').textContent = e.message;
+    }
+  }
+
+  function renderMyAccessStatus() {
+    const pending = myRequests.find(r => r.status === 'PENDING');
+    const licenseValid = currentUser.licenseValid;
+    let html = '';
+    if (licenseValid) {
+      html += `<span class="badge status-active">License active</span>`;
+      html += `<div style="margin-top:10px; color:var(--text-muted); font-size:13px;">Type: ${currentUser.licenseType || '-'} &middot; Expiry: ${currentUser.expiryDate || 'Never'}</div>`;
+      html += `<div style="margin-top:4px; color:var(--text-muted); font-size:13px;">Permissions: ${(currentUser.permissions || []).join(', ') || 'None'}</div>`;
+    } else {
+      html += `<span class="badge status-bad">No active license</span>`;
+    }
+    if (pending) {
+      html += `<div class="pending-note">Your ${pending.requestType === 'REGISTRATION' ? 'registration' : pending.requestType.toLowerCase().replace('_', ' ')} request is pending admin approval.</div>`;
+    }
+    $('my-access-status').innerHTML = html;
+
+    $('my-access-request-section').classList.toggle('hidden', !!pending);
+    if (!pending) {
+      $('ma-request-type').value = 'RENEWAL';
+      $('ma-perm-access').checked = false;
+      $('ma-perm-modify').checked = false;
+      $('ma-perm-approve').checked = false;
+      $('ma-note').value = '';
+      updateMaFieldsVisibility();
+    }
+  }
+
+  $('my-access-refresh').addEventListener('click', async () => {
+    try {
+      currentUser = await api('GET', '/api/auth/me');
+      await showMyAccess();
+    } catch (e) {
+      $('my-access-error').textContent = e.message;
+    }
+  });
+
+  $('my-access-submit').addEventListener('click', async () => {
+    $('my-access-error').textContent = '';
+    const type = $('ma-request-type').value;
+    const permissions = [];
+    if ($('ma-perm-access').checked) permissions.push('ACCESS');
+    if ($('ma-perm-modify').checked) permissions.push('MODIFY');
+    if ($('ma-perm-approve').checked) permissions.push('APPROVE');
+
+    const payload = { requestType: type, note: $('ma-note').value };
+    if (type === 'RENEWAL') {
+      payload.requestedLicenseType = $('ma-license-type').value;
+    } else {
+      payload.requestedPermissions = permissions;
+    }
+
+    $('my-access-submit').disabled = true;
+    try {
+      await api('POST', '/api/access-requests/mine', payload);
+      await showMyAccess();
+    } catch (e) {
+      $('my-access-error').textContent = e.message;
+    } finally {
+      $('my-access-submit').disabled = false;
+    }
   });
 
   // ---- Table ----
@@ -268,11 +710,12 @@
         <td>${escapeHtml(u.username)}</td>
         <td>${escapeHtml(u.fullName || '')}</td>
         <td>${escapeHtml(u.email || '')}</td>
+        <td>${escapeHtml(u.projectName || '')}</td>
         <td>${u.admin ? 'Yes' : 'No'}</td>
         <td>${(u.permissions || []).join(', ')}</td>
         <td>${u.licenseType || ''}</td>
         <td>${u.expiryDate || 'Never'}</td>
-        <td class="${statusClass}">${status}</td>
+        <td><span class="badge ${statusClass}">${status}</span></td>
       `;
       tr.addEventListener('click', () => {
         selectedId = u.id;
@@ -324,6 +767,7 @@
     $('user-dialog-error').textContent = '';
     $('user-dialog-title').textContent = mode === 'create' ? 'Add User' : 'Edit User';
     $('uf-password-label').textContent = mode === 'create' ? 'Password' : 'New password (leave blank to keep)';
+    $('uf-password-label').classList.toggle('required', mode === 'create');
     $('uf-password').value = '';
 
     if (mode === 'edit' && user) {
@@ -331,6 +775,7 @@
       $('uf-username').disabled = true;
       $('uf-fullname').value = user.fullName || '';
       $('uf-email').value = user.email || '';
+      $('uf-project').value = user.projectName || '';
       $('uf-admin').checked = !!user.admin;
       $('uf-perm-access').checked = (user.permissions || []).includes('ACCESS');
       $('uf-perm-modify').checked = (user.permissions || []).includes('MODIFY');
@@ -343,6 +788,7 @@
       $('uf-username').disabled = false;
       $('uf-fullname').value = '';
       $('uf-email').value = '';
+      $('uf-project').value = '';
       $('uf-admin').checked = false;
       $('uf-perm-access').checked = false;
       $('uf-perm-modify').checked = false;
@@ -350,10 +796,6 @@
       $('uf-enabled-row').classList.add('hidden');
       $('uf-license-fields').classList.remove('hidden');
       $('uf-license-type').value = 'STANDARD';
-      $('uf-never-expires').checked = false;
-      const d = new Date();
-      d.setFullYear(d.getFullYear() + 1);
-      $('uf-expiry').value = d.toISOString().slice(0, 10);
     }
     userDialog.showModal();
   }
@@ -365,15 +807,12 @@
   });
   $('user-dialog-cancel').addEventListener('click', () => userDialog.close());
 
-  $('uf-never-expires').addEventListener('change', (e) => {
-    $('uf-expiry').disabled = e.target.checked;
-  });
-
   $('user-dialog-save').addEventListener('click', async () => {
     const username = $('uf-username').value.trim();
     const password = $('uf-password').value;
     $('user-dialog-error').textContent = '';
     if (!username) { $('user-dialog-error').textContent = 'Username is required.'; return; }
+    if (!$('uf-project').value.trim()) { $('user-dialog-error').textContent = 'Project name is required.'; return; }
     if (userDialogMode === 'create' && !password) { $('user-dialog-error').textContent = 'Password is required.'; return; }
 
     const permissions = [];
@@ -389,10 +828,10 @@
           password,
           fullName: $('uf-fullname').value,
           email: $('uf-email').value,
+          projectName: $('uf-project').value,
           admin: $('uf-admin').checked,
           permissions,
           licenseType: $('uf-license-type').value,
-          expiryDate: $('uf-never-expires').checked ? null : $('uf-expiry').value,
         };
         const created = await api('POST', '/api/users', payload);
         userDialog.close();
@@ -402,6 +841,7 @@
         const payload = {
           fullName: $('uf-fullname').value,
           email: $('uf-email').value,
+          projectName: $('uf-project').value,
           enabled: $('uf-enabled').checked,
           admin: $('uf-admin').checked,
           permissions,
@@ -445,28 +885,16 @@
     $('renew-dialog-title').textContent = 'Renew License - ' + u.username;
     $('rf-license-type').value = u.licenseType || 'STANDARD';
     $('rf-revoke').checked = false;
-    if (!u.expiryDate) {
-      $('rf-never-expires').checked = true;
-      $('rf-expiry').disabled = true;
-      $('rf-expiry').value = '';
-    } else {
-      $('rf-never-expires').checked = false;
-      $('rf-expiry').disabled = false;
-      $('rf-expiry').value = u.expiryDate;
-    }
     renewDialog.showModal();
   });
   $('renew-dialog-cancel').addEventListener('click', () => renewDialog.close());
-  $('rf-never-expires').addEventListener('change', (e) => {
-    $('rf-expiry').disabled = e.target.checked;
-  });
 
   $('renew-dialog-save').addEventListener('click', async () => {
     const u = selectedUser();
     if (!u) return;
+    $('renew-dialog-error').textContent = '';
     const payload = {
       licenseType: $('rf-license-type').value,
-      expiryDate: $('rf-never-expires').checked ? null : $('rf-expiry').value,
       revoke: $('rf-revoke').checked,
     };
     $('renew-dialog-save').disabled = true;
@@ -481,6 +909,126 @@
       $('renew-dialog-save').disabled = false;
     }
   });
+
+  // ---- Pending Requests (admin) ----
+  const requestsDialog = $('requests-dialog');
+  const approveDialog = $('approve-request-dialog');
+  const rejectDialog = $('reject-request-dialog');
+  let pendingRequests = [];
+  let approveTarget = null;
+  let rejectTarget = null;
+
+  async function loadPendingRequests() {
+    try {
+      pendingRequests = await api('GET', '/api/access-requests');
+      renderRequestsTable();
+    } catch (e) {
+      showError(e);
+    }
+  }
+
+  function renderRequestsTable() {
+    const body = $('requests-table-body');
+    body.innerHTML = '';
+    $('requests-empty').classList.toggle('hidden', pendingRequests.length > 0);
+    for (const r of pendingRequests) {
+      const tr = document.createElement('tr');
+      const requested = r.requestType === 'PERMISSION_CHANGE'
+        ? ((r.requestedPermissions || []).join(', ') || 'None')
+        : (r.requestedLicenseType || '-');
+      tr.innerHTML = `
+        <td>${escapeHtml(r.username)}</td>
+        <td>${escapeHtml(r.projectName)}</td>
+        <td>${escapeHtml(r.requestType.replace('_', ' '))}</td>
+        <td>${escapeHtml(requested)}</td>
+        <td>${escapeHtml(r.note || '')}</td>
+        <td></td>
+      `;
+      const actionsTd = tr.lastElementChild;
+      const approveBtn = document.createElement('button');
+      approveBtn.textContent = 'Approve';
+      approveBtn.addEventListener('click', () => openApproveDialog(r));
+      const rejectBtn = document.createElement('button');
+      rejectBtn.textContent = 'Reject';
+      rejectBtn.className = 'danger';
+      rejectBtn.addEventListener('click', () => openRejectDialog(r));
+      actionsTd.appendChild(approveBtn);
+      actionsTd.appendChild(rejectBtn);
+      body.appendChild(tr);
+    }
+  }
+
+  $('requests-btn').addEventListener('click', async () => {
+    await loadPendingRequests();
+    requestsDialog.showModal();
+  });
+  $('requests-dialog-close').addEventListener('click', () => requestsDialog.close());
+
+  function openApproveDialog(request) {
+    approveTarget = request;
+    $('approve-request-error').textContent = '';
+    const isPermissionOnly = request.requestType === 'PERMISSION_CHANGE';
+    $('approve-license-fields').classList.toggle('hidden', isPermissionOnly);
+    $('ar-license-type').value = request.requestedLicenseType || 'STANDARD';
+    const perms = isPermissionOnly ? (request.requestedPermissions || []) : (request.currentPermissions || []);
+    $('ar-perm-access').checked = perms.includes('ACCESS');
+    $('ar-perm-modify').checked = perms.includes('MODIFY');
+    $('ar-perm-approve').checked = perms.includes('APPROVE');
+    approveDialog.showModal();
+  }
+  $('approve-request-cancel').addEventListener('click', () => approveDialog.close());
+
+  $('approve-request-save').addEventListener('click', async () => {
+    if (!approveTarget) return;
+    $('approve-request-error').textContent = '';
+    const isPermissionOnly = approveTarget.requestType === 'PERMISSION_CHANGE';
+    const permissions = [];
+    if ($('ar-perm-access').checked) permissions.push('ACCESS');
+    if ($('ar-perm-modify').checked) permissions.push('MODIFY');
+    if ($('ar-perm-approve').checked) permissions.push('APPROVE');
+
+    const payload = { permissions };
+    if (!isPermissionOnly) {
+      payload.licenseType = $('ar-license-type').value;
+    }
+
+    $('approve-request-save').disabled = true;
+    try {
+      await api('POST', '/api/access-requests/' + approveTarget.id + '/approve', payload);
+      approveDialog.close();
+      await loadPendingRequests();
+      $('status-line').textContent = 'Approved request for ' + approveTarget.username;
+    } catch (e) {
+      $('approve-request-error').textContent = e.message;
+    } finally {
+      $('approve-request-save').disabled = false;
+    }
+  });
+
+  function openRejectDialog(request) {
+    rejectTarget = request;
+    $('rr-reason').value = '';
+    rejectDialog.showModal();
+  }
+  $('reject-request-cancel').addEventListener('click', () => rejectDialog.close());
+
+  $('reject-request-save').addEventListener('click', async () => {
+    if (!rejectTarget) return;
+    $('reject-request-save').disabled = true;
+    try {
+      await api('POST', '/api/access-requests/' + rejectTarget.id + '/reject', { reason: $('rr-reason').value });
+      rejectDialog.close();
+      await loadPendingRequests();
+      $('status-line').textContent = 'Rejected request for ' + rejectTarget.username;
+    } catch (e) {
+      rejectDialog.close();
+      showError(e);
+    } finally {
+      $('reject-request-save').disabled = false;
+    }
+  });
+
+  checkForResetTokenInUrl();
 })();
 </script>
 

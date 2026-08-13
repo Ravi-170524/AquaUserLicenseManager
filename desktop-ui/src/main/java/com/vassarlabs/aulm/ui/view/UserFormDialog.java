@@ -29,6 +29,7 @@ public class UserFormDialog {
     private final PasswordField passwordField = new PasswordField();
     private final TextField fullNameField = new TextField();
     private final TextField emailField = new TextField();
+    private final TextField projectNameField = new TextField();
     private final CheckBox adminCheckBox = new CheckBox("Admin (can manage users in this tool)");
     private final CheckBox enabledCheckBox = new CheckBox("Enabled");
     private final CheckBox accessCheckBox = new CheckBox("Access");
@@ -59,6 +60,7 @@ public class UserFormDialog {
         grid.addRow(row++, new Label(editMode ? "New password (leave blank to keep)" : "Password"), passwordField);
         grid.addRow(row++, new Label("Full name"), fullNameField);
         grid.addRow(row++, new Label("Email"), emailField);
+        grid.addRow(row++, new Label("Project name"), projectNameField);
         grid.addRow(row++, new Label("Permissions"), new HBox(12, accessCheckBox, modifyCheckBox, approveCheckBox));
         grid.addRow(row++, new Label(""), adminCheckBox);
         if (editMode) {
@@ -76,6 +78,7 @@ public class UserFormDialog {
             usernameField.setDisable(true);
             fullNameField.setText(existing.getFullName());
             emailField.setText(existing.getEmail());
+            projectNameField.setText(existing.getProjectName());
             adminCheckBox.setSelected(existing.isAdmin());
             enabledCheckBox.setSelected(existing.isEnabled());
             Set<String> permissions = existing.getPermissions();
@@ -90,6 +93,7 @@ public class UserFormDialog {
         }
 
         neverExpiresCheckBox.selectedProperty().addListener((obs, old, isSelected) -> expiryDatePicker.setDisable(isSelected));
+        restrictToTodayOrLater(expiryDatePicker);
 
         Button saveButton = new Button(editMode ? "Save" : "Create");
         Button cancelButton = new Button("Cancel");
@@ -110,12 +114,37 @@ public class UserFormDialog {
             errorLabel.setText("Username is required.");
             return;
         }
+        if (projectNameField.getText().isBlank()) {
+            errorLabel.setText("Project name is required.");
+            return;
+        }
         if (!editMode && passwordField.getText().isBlank()) {
             errorLabel.setText("Password is required.");
             return;
         }
+        if (!editMode && !neverExpiresCheckBox.isSelected()) {
+            LocalDate expiry = expiryDatePicker.getValue();
+            if (expiry == null || expiry.isBefore(LocalDate.now())) {
+                errorLabel.setText("Expiry date cannot be in the past.");
+                return;
+            }
+        }
         confirmed = true;
         dialogStage.close();
+    }
+
+    /** Greys out and blocks selection of any day before today. */
+    private static void restrictToTodayOrLater(DatePicker picker) {
+        picker.setDayCellFactory(dp -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                if (date != null && date.isBefore(LocalDate.now())) {
+                    setDisable(true);
+                    setStyle("-fx-background-color: #eeeeee;");
+                }
+            }
+        });
     }
 
     private Set<String> collectPermissions() {
@@ -137,6 +166,7 @@ public class UserFormDialog {
                 passwordField.getText(),
                 fullNameField.getText(),
                 emailField.getText(),
+                projectNameField.getText(),
                 adminCheckBox.isSelected(),
                 collectPermissions(),
                 licenseTypeCombo.getValue(),
@@ -153,6 +183,7 @@ public class UserFormDialog {
         return Optional.of(new UpdateUserPayload(
                 fullNameField.getText(),
                 emailField.getText(),
+                projectNameField.getText(),
                 enabledCheckBox.isSelected(),
                 adminCheckBox.isSelected(),
                 collectPermissions(),

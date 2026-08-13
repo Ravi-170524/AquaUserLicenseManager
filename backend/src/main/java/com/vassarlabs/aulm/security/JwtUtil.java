@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -33,19 +34,19 @@ public class JwtUtil {
         }
     }
 
-    public String generateToken(String username) {
+    public String generateToken(UUID userUuid) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMillis);
         return Jwts.builder()
-                .subject(username)
+                .subject(userUuid.toString())
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
                 .compact();
     }
 
-    public String extractUsername(String token) {
-        return parseClaims(token).getSubject();
+    public UUID extractUserUuid(String token) {
+        return UUID.fromString(parseClaims(token).getSubject());
     }
 
     public boolean isValid(String token) {

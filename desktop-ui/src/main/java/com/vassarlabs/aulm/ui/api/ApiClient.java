@@ -35,8 +35,8 @@ public class ApiClient {
         this.token = token;
     }
 
-    public LoginResponseDto login(String username, String password) {
-        LoginPayload payload = new LoginPayload(username, password);
+    public LoginResponseDto login(String username, String projectName, String password) {
+        LoginPayload payload = new LoginPayload(username, projectName, password);
         return send("POST", "/api/auth/login", payload, LoginResponseDto.class, false);
     }
 
@@ -108,6 +108,6 @@ public class ApiClient {
         }
     }
 
-    private record LoginPayload(String username, String password) {
+    private record LoginPayload(String username, String projectName, String password) {
     }
 }

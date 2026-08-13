@@ -25,6 +25,7 @@ public class DataSeeder implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
     private static final String DEFAULT_ADMIN_USERNAME = "admin";
     private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
+    private static final String DEFAULT_ADMIN_PROJECT = "AULM";
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -36,7 +37,7 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (userRepository.existsByUsername(DEFAULT_ADMIN_USERNAME)) {
+        if (userRepository.existsByUsernameAndProjectName(DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_PROJECT)) {
             return;
         }
 
@@ -44,6 +45,7 @@ public class DataSeeder implements CommandLineRunner {
         admin.setUsername(DEFAULT_ADMIN_USERNAME);
         admin.setPasswordHash(passwordEncoder.encode(DEFAULT_ADMIN_PASSWORD));
         admin.setFullName("Administrator");
+        admin.setProjectName(DEFAULT_ADMIN_PROJECT);
         admin.setAdmin(true);
         admin.setPermissions(EnumSet.of(PermissionType.ACCESS, PermissionType.MODIFY, PermissionType.APPROVE));
 
@@ -52,11 +54,11 @@ public class DataSeeder implements CommandLineRunner {
         license.setLicenseType(LicenseType.ADMIN);
         license.setStatus(LicenseStatus.ACTIVE);
         license.setIssuedDate(LocalDate.now());
-        license.setExpiryDate(null);
+        license.setExpiryDate(LicenseType.ADMIN.computeExpiryDate(LocalDate.now()));
         admin.setLicense(license);
 
         userRepository.save(admin);
-        log.warn("Created default admin account (username='{}', password='{}'). Log in and change this password immediately.",
-                DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_PASSWORD);
+        log.warn("Created default admin account (username='{}', project='{}', password='{}'). Log in and change this password immediately.",
+                DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_PROJECT, DEFAULT_ADMIN_PASSWORD);
     }
 }

@@ -31,6 +31,9 @@ public class LoginView {
         TextField usernameField = new TextField();
         usernameField.setPromptText("Username");
 
+        TextField projectNameField = new TextField();
+        projectNameField.setPromptText("Project name");
+
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Password");
 
@@ -44,9 +47,10 @@ public class LoginView {
 
         loginButton.setOnAction(e -> {
             String username = usernameField.getText().trim();
+            String projectName = projectNameField.getText().trim();
             String password = passwordField.getText();
-            if (username.isEmpty() || password.isEmpty()) {
-                errorLabel.setText("Please enter a username and password.");
+            if (username.isEmpty() || projectName.isEmpty() || password.isEmpty()) {
+                errorLabel.setText("Please enter a username, project name and password.");
                 return;
             }
 
@@ -56,7 +60,7 @@ public class LoginView {
             Task<LoginResponseDto> task = new Task<>() {
                 @Override
                 protected LoginResponseDto call() {
-                    return apiClient.login(username, password);
+                    return apiClient.login(username, projectName, password);
                 }
             };
             task.setOnSucceeded(evt -> {
@@ -77,7 +81,7 @@ public class LoginView {
             new Thread(task, "aulm-login").start();
         });
 
-        VBox form = new VBox(12, title, usernameField, passwordField, loginButton, errorLabel);
+        VBox form = new VBox(12, title, usernameField, projectNameField, passwordField, loginButton, errorLabel);
         form.setPadding(new Insets(30));
         form.setAlignment(Pos.CENTER);
         form.setMaxWidth(320);

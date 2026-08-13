@@ -8,6 +8,7 @@ public class UserDto {
     private String username;
     private String fullName;
     private String email;
+    private String projectName;
     private boolean enabled;
     private boolean admin;
     private Set<String> permissions;
@@ -48,6 +49,14 @@ public class UserDto {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     public boolean isEnabled() {

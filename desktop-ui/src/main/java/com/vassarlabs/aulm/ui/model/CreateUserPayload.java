@@ -8,6 +8,7 @@ public record CreateUserPayload(
         String password,
         String fullName,
         String email,
+        String projectName,
         boolean admin,
         Set<String> permissions,
         String licenseType,

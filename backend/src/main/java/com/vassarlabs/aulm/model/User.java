@@ -1,19 +1,26 @@
 package com.vassarlabs.aulm.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.UuidGenerator;
+
 import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
-@Table(name = "app_users")
+@Table(name = "app_users", uniqueConstraints = @UniqueConstraint(columnNames = {"username", "projectName"}))
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @UuidGenerator
+    @Column(nullable = false, updatable = false, unique = true)
+    private UUID uuid;
+
+    @Column(nullable = false)
     private String username;
 
     @Column(nullable = false)
@@ -22,6 +29,9 @@ public class User {
     private String fullName;
 
     private String email;
+
+    @Column(nullable = false)
+    private String projectName;
 
     @Column(nullable = false)
     private boolean enabled = true;
@@ -48,6 +58,10 @@ public class User {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public UUID getUuid() {
+        return uuid;
     }
 
     public String getUsername() {
@@ -80,6 +94,14 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getProjectName() {
+        return projectName;
+    }
+
+    public void setProjectName(String projectName) {
+        this.projectName = projectName;
     }
 
     public boolean isEnabled() {
