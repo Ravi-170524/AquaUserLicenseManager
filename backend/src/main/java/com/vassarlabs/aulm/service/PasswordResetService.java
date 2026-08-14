@@ -1,6 +1,7 @@
 package com.vassarlabs.aulm.service;
 
 import com.vassarlabs.aulm.dto.ForgotPasswordRequest;
+import com.vassarlabs.aulm.dto.ForgotPasswordResponse;
 import com.vassarlabs.aulm.dto.ResetPasswordRequest;
 import com.vassarlabs.aulm.exception.ApiException;
 import com.vassarlabs.aulm.model.PasswordResetToken;
@@ -46,18 +47,15 @@ public class PasswordResetService {
         this.appBaseUrl = appBaseUrl;
     }
 
-    /**
-     * Always succeeds from the caller's point of view, whether or not the account/email exists,
-     * so this endpoint can't be used to enumerate valid usernames.
-     */
-    public void requestReset(ForgotPasswordRequest request) {
+    public ForgotPasswordResponse requestReset(ForgotPasswordRequest request) {
         Optional<User> userOpt = userRepository.findByUsernameAndProjectName(request.username(), request.projectName());
-        if (userOpt.isEmpty()) {
-            return;
-        }
-        User user = userOpt.get();
-        if (user.getEmail() == null || user.getEmail().isBlank()) {
-            return;
+        User user = userOpt.orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST,
+                "No account found with that username, project, and email."));
+
+        if (user.getEmail() == null || user.getEmail().isBlank()
+                || !user.getEmail().equalsIgnoreCase(request.email())) {
+            throw new ApiException(HttpStatus.BAD_REQUEST,
+                    "No account found with that username, project, and email.");
         }
 
         PasswordResetToken resetToken = new PasswordResetToken();
@@ -67,6 +65,8 @@ public class PasswordResetService {
         tokenRepository.save(resetToken);
 
         sendResetEmail(user, resetToken.getToken());
+
+        return new ForgotPasswordResponse(user.getEmail());
     }
 
     public void resetPassword(ResetPasswordRequest request) {

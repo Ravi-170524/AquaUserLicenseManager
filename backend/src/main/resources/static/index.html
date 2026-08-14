@@ -147,7 +147,9 @@
     <input type="text" id="fp-username" autocomplete="username">
     <label class="required" for="fp-project">Project name</label>
     <input type="text" id="fp-project">
-    <div class="form-hint">If an account matches and has an email on file, we'll send a reset link to it.</div>
+    <label class="required" for="fp-email">Email</label>
+    <input type="email" id="fp-email" autocomplete="email">
+    <div class="form-hint">We'll send a reset link to this email if it matches the account on file.</div>
     <div class="field-error" id="forgot-password-error"></div>
     <button id="forgot-password-button" style="width:100%; margin-top:10px;">Send Reset Link</button>
     <div class="auth-switch"><a href="#" id="show-login-from-forgot-link">Back to login</a></div>
@@ -501,6 +503,7 @@
     $('forgot-password-error').textContent = '';
     $('fp-username').value = '';
     $('fp-project').value = '';
+    $('fp-email').value = '';
     hideAllViews();
     $('forgot-password-view').classList.remove('hidden');
   });
@@ -516,16 +519,17 @@
   $('forgot-password-button').addEventListener('click', async () => {
     const username = $('fp-username').value.trim();
     const projectName = $('fp-project').value.trim();
+    const email = $('fp-email').value.trim();
     $('forgot-password-error').textContent = '';
-    if (!username || !projectName) {
-      $('forgot-password-error').textContent = 'Username and project name are required.';
+    if (!username || !projectName || !email) {
+      $('forgot-password-error').textContent = 'Username, project name, and email are required.';
       return;
     }
     $('forgot-password-button').disabled = true;
     try {
-      await api('POST', '/api/auth/forgot-password', { username, projectName });
+      const result = await api('POST', '/api/auth/forgot-password', { username, projectName, email });
       $('forgot-password-error').style.color = 'var(--green-fg)';
-      $('forgot-password-error').textContent = 'If that account exists and has an email on file, a reset link has been sent.';
+      $('forgot-password-error').textContent = `A reset link has been sent to ${result.email}.`;
     } catch (e) {
       $('forgot-password-error').style.color = 'var(--red-fg)';
       $('forgot-password-error').textContent = e.message;

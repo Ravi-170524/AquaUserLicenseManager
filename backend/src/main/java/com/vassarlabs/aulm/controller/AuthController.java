@@ -1,6 +1,7 @@
 package com.vassarlabs.aulm.controller;
 
 import com.vassarlabs.aulm.dto.ForgotPasswordRequest;
+import com.vassarlabs.aulm.dto.ForgotPasswordResponse;
 import com.vassarlabs.aulm.dto.LoginRequest;
 import com.vassarlabs.aulm.dto.LoginResponse;
 import com.vassarlabs.aulm.dto.RegisterRequest;
@@ -53,8 +54,8 @@ public class AuthController {
     }
 
     @PostMapping("/forgot-password")
-    public void forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
-        passwordResetService.requestReset(request);
+    public ForgotPasswordResponse forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return passwordResetService.requestReset(request);
     }
 
     @PostMapping("/reset-password")
