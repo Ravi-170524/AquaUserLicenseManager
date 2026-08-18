@@ -2,6 +2,7 @@ package com.vassarlabs.aulm.model;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.UuidGenerator;
+import com.vassarlabs.aulm.persistence.PermissionTypeConverter;
 
 import java.time.LocalDateTime;
 import java.util.EnumSet;
@@ -46,7 +47,7 @@ public class User {
 
     @ElementCollection(targetClass = PermissionType.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "user_permissions", joinColumns = @JoinColumn(name = "user_id"))
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = PermissionTypeConverter.class)
     @Column(name = "permission")
     private Set<PermissionType> permissions = EnumSet.noneOf(PermissionType.class);
 

@@ -1,6 +1,7 @@
 package com.vassarlabs.aulm.model;
 
 import jakarta.persistence.*;
+import com.vassarlabs.aulm.persistence.LicenseTypeConverter;
 import java.time.LocalDate;
 
 @Entity
@@ -14,7 +15,7 @@ public class License {
     @Column(unique = true, nullable = false, updatable = false)
     private String licenseKey;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = LicenseTypeConverter.class)
     @Column(nullable = false)
     private LicenseType licenseType;
 

@@ -1,6 +1,8 @@
 package com.vassarlabs.aulm.model;
 
 import jakarta.persistence.*;
+import com.vassarlabs.aulm.persistence.LicenseTypeConverter;
+import com.vassarlabs.aulm.persistence.PermissionTypeConverter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -32,7 +34,7 @@ public class AccessRequest {
     @Column(nullable = false)
     private AccessRequestStatus status = AccessRequestStatus.PENDING;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = LicenseTypeConverter.class)
     private LicenseType requestedLicenseType;
 
     /** Only set when requestedLicenseType is CUSTOM. */
@@ -44,7 +46,7 @@ public class AccessRequest {
 
     @ElementCollection(targetClass = PermissionType.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "access_request_permissions", joinColumns = @JoinColumn(name = "access_request_id"))
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = PermissionTypeConverter.class)
     @Column(name = "permission")
     private Set<PermissionType> requestedPermissions = EnumSet.noneOf(PermissionType.class);
 

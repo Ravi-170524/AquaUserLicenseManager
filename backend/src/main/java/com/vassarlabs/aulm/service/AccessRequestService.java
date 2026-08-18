@@ -17,6 +17,7 @@ import com.vassarlabs.aulm.model.User;
 import com.vassarlabs.aulm.repository.AccessRequestRepository;
 import com.vassarlabs.aulm.repository.ProjectRepository;
 import com.vassarlabs.aulm.repository.UserRepository;
+import com.vassarlabs.aulm.util.InputNormalizer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -39,7 +40,7 @@ import java.util.UUID;
 public class AccessRequestService {
 
     private static final Logger log = LoggerFactory.getLogger(AccessRequestService.class);
-    private static final String GLOBAL_ADMIN_PROJECT = "AULM";
+    private static final String GLOBAL_ADMIN_PROJECT = "aulm";
 
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
@@ -64,19 +65,23 @@ public class AccessRequestService {
     }
 
     public User register(RegisterRequest request) {
-        if (userRepository.existsByUsernameAndProjectName(request.username(), request.projectName())) {
+        String username = InputNormalizer.lowerTrim(request.username());
+        String projectName = InputNormalizer.lowerTrim(request.projectName());
+        String email = InputNormalizer.lowerTrim(request.email());
+        log.info("register username={} project={}", username, projectName);
+        if (userRepository.existsByUsernameAndProjectName(username, projectName)) {
             throw new ApiException(HttpStatus.CONFLICT, "This username already exists for this project");
         }
-        if (!projectRepository.existsByName(request.projectName())) {
+        if (!projectRepository.existsByName(projectName)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Unknown project — choose one from the list");
         }
 
         User user = new User();
-        user.setUsername(request.username());
+        user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFullName(request.fullName());
-        user.setEmail(request.email());
-        user.setProjectName(request.projectName());
+        user.setEmail(email);
+        user.setProjectName(projectName);
         user.setEnabled(true);
         user = userRepository.save(user);
 
@@ -88,7 +93,7 @@ public class AccessRequestService {
                 ? EnumSet.noneOf(PermissionType.class)
                 : EnumSet.copyOf(request.requestedPermissions()));
         accessRequest.setNote(request.note());
-        accessRequest.setAssignedAdmin(resolveAssignedAdmin(request.assignedAdminId(), request.projectName()));
+        accessRequest.setAssignedAdmin(resolveAssignedAdmin(request.assignedAdminId(), projectName));
         accessRequestRepository.save(accessRequest);
         notifyAdmins(accessRequest);
 
@@ -96,6 +101,7 @@ public class AccessRequestService {
     }
 
     public AccessRequest createRequest(User requester, CreateAccessRequestRequest request) {
+        log.info("createRequest username={} project={} type={}", requester.getUsername(), requester.getProjectName(), request.requestType());
         if (request.requestType() == AccessRequestType.REGISTRATION) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Use the registration endpoint to create a new account");
         }
@@ -140,9 +146,10 @@ public class AccessRequestService {
         if (assignedAdminId == null) {
             return null;
         }
+        String normalizedProjectName = InputNormalizer.lowerTrim(projectName);
         User admin = userRepository.findById(assignedAdminId)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Selected admin was not found"));
-        boolean isProjectAdmin = admin.isAdmin() && admin.getProjectName().equals(projectName);
+        boolean isProjectAdmin = admin.isAdmin() && admin.getProjectName().equals(normalizedProjectName);
         if (!isProjectAdmin && !admin.isSuperAdmin()) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Selected admin was not found");
         }
@@ -191,9 +198,11 @@ public class AccessRequestService {
 
     /** Admin picker for registration/access requests: anyone holding an ADMIN-tier license in this project, plus AULM (the org-wide admin project). */
     public List<AdminSummary> listAdmins(String projectName) {
-        List<String> eligibleProjects = projectName.equals(GLOBAL_ADMIN_PROJECT)
-                ? List.of(projectName)
-                : List.of(projectName, GLOBAL_ADMIN_PROJECT);
+        String normalizedProjectName = InputNormalizer.lowerTrim(projectName);
+        log.info("listAdmins project={}", normalizedProjectName);
+        List<String> eligibleProjects = normalizedProjectName.equals(GLOBAL_ADMIN_PROJECT)
+                ? List.of(normalizedProjectName)
+                : List.of(normalizedProjectName, GLOBAL_ADMIN_PROJECT);
         return userRepository.findByLicense_LicenseTypeAndProjectNameInOrderByUsername(LicenseType.ADMIN, eligibleProjects)
                 .stream()
                 .map(AdminSummary::from)

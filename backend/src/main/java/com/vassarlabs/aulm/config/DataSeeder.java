@@ -27,7 +27,7 @@ public class DataSeeder implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
     private static final String DEFAULT_ADMIN_USERNAME = "admin";
     private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
-    private static final String DEFAULT_ADMIN_PROJECT = "AULM";
+    private static final String DEFAULT_ADMIN_PROJECT = "aulm";
     private static final String DEFAULT_ADMIN_GMAIL = "bipin.kumar@vassarlabs.com";
 
     private final UserRepository userRepository;

@@ -12,6 +12,9 @@ import com.vassarlabs.aulm.model.LicenseType;
 import com.vassarlabs.aulm.model.User;
 import com.vassarlabs.aulm.repository.AccessRequestRepository;
 import com.vassarlabs.aulm.repository.UserRepository;
+import com.vassarlabs.aulm.util.InputNormalizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,6 +32,8 @@ import java.util.UUID;
 @Transactional
 public class UserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
+
     private final UserRepository userRepository;
     private final AccessRequestRepository accessRequestRepository;
     private final PasswordEncoder passwordEncoder;
@@ -43,6 +48,7 @@ public class UserService {
     /** Project-scoped admins only see their own project's users; superadmins see everyone. Not-yet-approved
      *  registrations are excluded here — they only show up under Pending Requests until resolved. */
     public List<User> listUsers(User admin) {
+        log.info("listUsers username={} project={}", admin.getUsername(), admin.getProjectName());
         List<User> candidates = admin.isSuperAdmin()
                 ? userRepository.findAll()
                 : userRepository.findByProjectNameOrderByUsername(admin.getProjectName());
@@ -55,21 +61,25 @@ public class UserService {
     }
 
     public User getUser(Long id) {
+        log.info("getUser id={}", id);
         return userRepository.findById(id)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
     public User createUser(CreateUserRequest request) {
-        if (userRepository.existsByUsernameAndProjectName(request.username(), request.projectName())) {
+        String username = InputNormalizer.lowerTrim(request.username());
+        String projectName = InputNormalizer.lowerTrim(request.projectName());
+        log.info("createUser username={} project={}", username, projectName);
+        if (userRepository.existsByUsernameAndProjectName(username, projectName)) {
             throw new ApiException(HttpStatus.CONFLICT, "This username already exists for this project");
         }
 
         User user = new User();
-        user.setUsername(request.username());
+        user.setUsername(username);
         user.setPasswordHash(passwordEncoder.encode(request.password()));
         user.setFullName(request.fullName());
-        user.setEmail(request.email());
-        user.setProjectName(request.projectName());
+        user.setEmail(InputNormalizer.lowerTrim(request.email()));
+        user.setProjectName(projectName);
         user.setAdmin(request.admin());
         user.setPermissions(request.permissions() == null || request.permissions().isEmpty()
                 ? EnumSet.noneOf(com.vassarlabs.aulm.model.PermissionType.class)
@@ -93,22 +103,24 @@ public class UserService {
     }
 
     public User updateUser(Long id, UpdateUserRequest request) {
+        log.info("updateUser id={}", id);
         User user = getUser(id);
         if (request.fullName() != null) {
             user.setFullName(request.fullName());
         }
         if (request.email() != null) {
-            user.setEmail(request.email());
+            user.setEmail(InputNormalizer.lowerTrim(request.email()));
         }
         if (request.projectName() != null) {
+            String projectName = InputNormalizer.lowerTrim(request.projectName());
             if (request.projectName().isBlank()) {
                 throw new ApiException(HttpStatus.BAD_REQUEST, "Project name cannot be blank");
             }
-            if (!request.projectName().equals(user.getProjectName())
-                    && userRepository.existsByUsernameAndProjectName(user.getUsername(), request.projectName())) {
+            if (!projectName.equals(user.getProjectName())
+                    && userRepository.existsByUsernameAndProjectName(user.getUsername(), projectName)) {
                 throw new ApiException(HttpStatus.CONFLICT, "This username already exists for this project");
             }
-            user.setProjectName(request.projectName());
+            user.setProjectName(projectName);
         }
         if (request.enabled() != null) {
             user.setEnabled(request.enabled());
@@ -128,6 +140,7 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
+        log.info("deleteUser id={}", id);
         User user = getUser(id);
         if (user.isAdmin() && userRepository.countByAdminTrue() <= 1) {
             throw new ApiException(HttpStatus.CONFLICT, "Cannot delete the last remaining admin account.");
@@ -136,6 +149,7 @@ public class UserService {
     }
 
     public User renewLicense(Long id, RenewLicenseRequest request) {
+        log.info("renewLicense id={} type={}", id, request.licenseType());
         User user = getUser(id);
         License license = user.getLicense();
         if (license == null) {

@@ -6,6 +6,9 @@ import com.vassarlabs.aulm.dto.UserResponse;
 import com.vassarlabs.aulm.model.User;
 import com.vassarlabs.aulm.repository.UserRepository;
 import com.vassarlabs.aulm.security.JwtUtil;
+import com.vassarlabs.aulm.util.InputNormalizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import com.vassarlabs.aulm.exception.ApiException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AuthService {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -25,7 +30,10 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByUsernameAndProjectName(request.username(), request.projectName())
+        String username = InputNormalizer.lowerTrim(request.username());
+        String projectName = InputNormalizer.lowerTrim(request.projectName());
+        log.info("login username={} project={}", username, projectName);
+        User user = userRepository.findByUsernameAndProjectName(username, projectName)
                 .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid username, project or password"));
 
         if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
@@ -44,6 +52,7 @@ public class AuthService {
      * (e.g. an unlicensed user lands on a "request access" screen instead of the dashboard).
      */
     public LoginResponse issueTokenFor(User user) {
+        log.info("issueTokenFor username={} project={}", user.getUsername(), user.getProjectName());
         String token = jwtUtil.generateToken(user.getUuid());
         return new LoginResponse(token, UserResponse.from(user));
     }

@@ -15,6 +15,9 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.vassarlabs.aulm.util.InputNormalizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -25,6 +28,7 @@ import java.util.UUID;
 public class PasswordResetService {
 
     private static final long TOKEN_EXPIRY_MINUTES = 30;
+    private static final Logger log = LoggerFactory.getLogger(PasswordResetService.class);
 
     private final UserRepository userRepository;
     private final PasswordResetTokenRepository tokenRepository;
@@ -48,12 +52,16 @@ public class PasswordResetService {
     }
 
     public ForgotPasswordResponse requestReset(ForgotPasswordRequest request) {
-        Optional<User> userOpt = userRepository.findByUsernameAndProjectName(request.username(), request.projectName());
+        String username = InputNormalizer.lowerTrim(request.username());
+        String projectName = InputNormalizer.lowerTrim(request.projectName());
+        String email = InputNormalizer.lowerTrim(request.email());
+        log.info("requestReset username={} project={}", username, projectName);
+        Optional<User> userOpt = userRepository.findByUsernameAndProjectName(username, projectName);
         User user = userOpt.orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST,
                 "No account found with that username, project, and email."));
 
         if (user.getEmail() == null || user.getEmail().isBlank()
-                || !user.getEmail().equalsIgnoreCase(request.email())) {
+                || !user.getEmail().equalsIgnoreCase(email)) {
             throw new ApiException(HttpStatus.BAD_REQUEST,
                     "No account found with that username, project, and email.");
         }
@@ -70,6 +78,7 @@ public class PasswordResetService {
     }
 
     public void resetPassword(ResetPasswordRequest request) {
+        log.info("resetPassword token={}", request.token());
         PasswordResetToken resetToken = tokenRepository.findByToken(request.token())
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Invalid or expired reset link"));
         if (!resetToken.isValid()) {
