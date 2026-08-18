@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS licenses (
     user_id       BIGINT       NOT NULL,
     CONSTRAINT uk_licenses_license_key UNIQUE (license_key),
     CONSTRAINT uk_licenses_user_id UNIQUE (user_id),
-    CONSTRAINT ck_licenses_license_type CHECK (license_type IN ('TRIAL', 'STANDARD', 'PREMIUM', 'ADMIN', 'CUSTOM')),
+    CONSTRAINT ck_licenses_license_type CHECK (license_type IN ('trial', 'standard', 'premium', 'admin', 'custom')),
     CONSTRAINT ck_licenses_status CHECK (status IN ('ACTIVE', 'REVOKED')),
     CONSTRAINT fk_licenses_user FOREIGN KEY (user_id) REFERENCES app_users (id) ON DELETE CASCADE
 );
@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS user_permissions (
     user_id     BIGINT      NOT NULL,
     permission  VARCHAR(32) NOT NULL,
     CONSTRAINT pk_user_permissions PRIMARY KEY (user_id, permission),
-    CONSTRAINT ck_user_permissions_permission CHECK (permission IN ('ACCESS', 'MODIFY', 'APPROVE')),
+    CONSTRAINT ck_user_permissions_permission CHECK (permission IN ('access', 'modify', 'approve')),
     CONSTRAINT fk_user_permissions_user FOREIGN KEY (user_id) REFERENCES app_users (id) ON DELETE CASCADE
 );
 
@@ -64,12 +64,11 @@ CREATE TABLE IF NOT EXISTS access_requests (
     resolved_at            TIMESTAMP,
     CONSTRAINT ck_access_requests_type CHECK (request_type IN ('REGISTRATION', 'RENEWAL', 'PERMISSION_CHANGE')),
     CONSTRAINT ck_access_requests_status CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
-    CONSTRAINT ck_access_requests_license_type CHECK (requested_license_type IS NULL OR requested_license_type IN ('TRIAL', 'STANDARD', 'PREMIUM', 'ADMIN', 'CUSTOM')),
+    CONSTRAINT ck_access_requests_license_type CHECK (requested_license_type IS NULL OR requested_license_type IN ('trial', 'standard', 'premium', 'admin', 'custom')),
     CONSTRAINT fk_access_requests_user FOREIGN KEY (user_id) REFERENCES app_users (id) ON DELETE CASCADE,
     CONSTRAINT fk_access_requests_assigned_admin FOREIGN KEY (assigned_admin_id) REFERENCES app_users (id) ON DELETE SET NULL
 );
 
--- Safe to re-run against a database created before requested_start_date/requested_expiry_date existed.
 ALTER TABLE access_requests ADD COLUMN IF NOT EXISTS requested_start_date DATE;
 ALTER TABLE access_requests ADD COLUMN IF NOT EXISTS requested_expiry_date DATE;
 
@@ -77,7 +76,7 @@ CREATE TABLE IF NOT EXISTS access_request_permissions (
     access_request_id  BIGINT      NOT NULL,
     permission          VARCHAR(32) NOT NULL,
     CONSTRAINT pk_access_request_permissions PRIMARY KEY (access_request_id, permission),
-    CONSTRAINT ck_access_request_permissions_permission CHECK (permission IN ('ACCESS', 'MODIFY', 'APPROVE')),
+    CONSTRAINT ck_access_request_permissions_permission CHECK (permission IN ('access', 'modify', 'approve')),
     CONSTRAINT fk_access_request_permissions_request FOREIGN KEY (access_request_id) REFERENCES access_requests (id) ON DELETE CASCADE
 );
 

@@ -94,6 +94,7 @@ public class PasswordResetService {
     }
 
     private void sendResetEmail(User user, String token) {
+        log.info("sendResetEmail username={} project={}", user.getUsername(), user.getProjectName());
         String link = appBaseUrl + "/?resetToken=" + token;
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(mailFrom);
@@ -105,5 +106,6 @@ public class PasswordResetService {
                 + link + "\n\n"
                 + "If you didn't request this, you can safely ignore this email.");
         mailSender.send(message);
+        log.info("sendResetEmail username={} sent", user.getUsername());
     }
 }

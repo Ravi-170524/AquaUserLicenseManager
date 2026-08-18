@@ -144,6 +144,7 @@ public class AccessRequestService {
 
     private User resolveAssignedAdmin(Long assignedAdminId, String projectName) {
         if (assignedAdminId == null) {
+            log.info("resolveAssignedAdmin project={} assignedAdminId=none (any admin)", projectName);
             return null;
         }
         String normalizedProjectName = InputNormalizer.lowerTrim(projectName);
@@ -151,8 +152,10 @@ public class AccessRequestService {
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, "Selected admin was not found"));
         boolean isProjectAdmin = admin.isAdmin() && admin.getProjectName().equals(normalizedProjectName);
         if (!isProjectAdmin && !admin.isSuperAdmin()) {
+            log.warn("resolveAssignedAdmin project={} assignedAdminId={} rejected — not an admin of this project", normalizedProjectName, assignedAdminId);
             throw new ApiException(HttpStatus.BAD_REQUEST, "Selected admin was not found");
         }
+        log.info("resolveAssignedAdmin project={} assignedAdmin={}", normalizedProjectName, admin.getUsername());
         return admin;
     }
 
@@ -161,12 +164,16 @@ public class AccessRequestService {
         List<User> recipients = accessRequest.getAssignedAdmin() != null
                 ? List.of(accessRequest.getAssignedAdmin())
                 : userRepository.findByAdminTrueAndProjectNameOrderByUsername(accessRequest.getUser().getProjectName());
+        log.info("notifyAdmins requestId={} requester={} project={} recipients={}",
+                accessRequest.getId(), accessRequest.getUser().getUsername(), accessRequest.getUser().getProjectName(),
+                recipients.stream().map(User::getUsername).toList());
 
         String[] emails = recipients.stream()
                 .map(User::getEmail)
                 .filter(email -> email != null && !email.isBlank())
                 .toArray(String[]::new);
         if (emails.length == 0) {
+            log.warn("notifyAdmins requestId={} skipped — no recipient has an email address on file", accessRequest.getId());
             return;
         }
 
@@ -191,6 +198,7 @@ public class AccessRequestService {
             body.append("\nLog in to Aqua User & License Manager to review: ").append(appBaseUrl);
             message.setText(body.toString());
             mailSender.send(message);
+            log.info("notifyAdmins requestId={} sent to {}", accessRequest.getId(), emails.length);
         } catch (MailException e) {
             log.warn("Failed to send access request notification email for request {}: {}", accessRequest.getId(), e.getMessage());
         }
@@ -210,15 +218,18 @@ public class AccessRequestService {
     }
 
     public List<AccessRequest> myRequests(User user) {
+        log.info("myRequests username={} project={}", user.getUsername(), user.getProjectName());
         return accessRequestRepository.findByUserOrderByCreatedAtDesc(user);
     }
 
     /** Only requests sent to "any admin", or specifically to this admin, are visible to them. */
     public List<AccessRequest> listPending(User admin) {
+        log.info("listPending username={} project={}", admin.getUsername(), admin.getProjectName());
         return accessRequestRepository.findVisibleTo(AccessRequestStatus.PENDING, admin);
     }
 
     public AccessRequest approve(Long id, ApproveAccessRequestRequest request, User admin) {
+        log.info("approve requestId={} admin={} project={}", id, admin.getUsername(), admin.getProjectName());
         AccessRequest accessRequest = getPendingOrThrow(id);
         assertCanResolve(accessRequest, admin);
         User user = accessRequest.getUser();
@@ -266,6 +277,7 @@ public class AccessRequestService {
     }
 
     public AccessRequest reject(Long id, RejectAccessRequestRequest request, User admin) {
+        log.info("reject requestId={} admin={} project={}", id, admin.getUsername(), admin.getProjectName());
         AccessRequest accessRequest = getPendingOrThrow(id);
         assertCanResolve(accessRequest, admin);
         accessRequest.setStatus(AccessRequestStatus.REJECTED);

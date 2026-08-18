@@ -66,6 +66,14 @@
   button:disabled { opacity: 0.45; cursor: default; }
   button + button { margin-left: 8px; }
 
+  .btn-with-badge { position: relative; overflow: visible; }
+  .req-badge {
+    position: absolute; top: -7px; right: -7px; min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 999px; background: var(--red-fg); color: #fff; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; line-height: 1;
+    box-shadow: 0 0 0 2px #fff;
+  }
+
   .toolbar { margin-bottom: 18px; display: flex; gap: 8px; align-items: center; }
   .toolbar .spacer { flex: 1; }
 
@@ -319,7 +327,7 @@
       <button id="edit-btn" class="secondary" disabled>Edit</button>
       <button id="renew-btn" class="secondary" disabled>Renew License</button>
       <button id="delete-btn" class="danger" disabled>Delete</button>
-      <button id="requests-btn" class="secondary">Pending Requests</button>
+      <button id="requests-btn" class="secondary btn-with-badge">Pending Requests<span id="requests-badge" class="req-badge hidden">0</span></button>
       <button id="projects-btn" class="secondary hidden">Manage Projects</button>
       <div class="spacer"></div>
       <button id="refresh-btn" class="secondary">Refresh</button>
@@ -483,6 +491,8 @@
   let currentUser = null;
   let users = [];
   let selectedId = null;
+  let pendingRequestsPollTimer = null;
+  const PENDING_REQUESTS_POLL_MS = 30000;
 
   const $ = (id) => document.getElementById(id);
 
@@ -537,12 +547,25 @@
     loadProjectOptions($('login-project'));
   }
 
+  function stopPendingRequestsPoll() {
+    if (pendingRequestsPollTimer !== null) {
+      clearInterval(pendingRequestsPollTimer);
+      pendingRequestsPollTimer = null;
+    }
+  }
+
+  function startPendingRequestsPoll() {
+    stopPendingRequestsPoll();
+    pendingRequestsPollTimer = setInterval(refreshPendingRequestsCount, PENDING_REQUESTS_POLL_MS);
+  }
+
   function doLogout() {
     token = null;
     currentUser = null;
     myRequests = [];
     users = [];
     selectedId = null;
+    stopPendingRequestsPoll();
     showLoginView();
     $('who-line').textContent = '';
     $('login-username').value = '';
@@ -558,6 +581,7 @@
       $('who-line').textContent = 'Signed in as ' + currentUser.username
         + (currentUser.superAdmin ? ' (admin, superadmin)' : ' (admin)');
       await refresh();
+      startPendingRequestsPoll();
     } else if (currentUser.superAdmin) {
       $('superadmin-view').classList.remove('hidden');
       $('who-line').textContent = 'Signed in as ' + currentUser.username + ' (superadmin)';
@@ -972,6 +996,7 @@
       renderTable();
       updateToolbarState();
       $('status-line').textContent = users.length + ' user(s)';
+      refreshPendingRequestsCount();
     } catch (e) {
       showError(e);
       $('status-line').textContent = '';
@@ -1167,12 +1192,28 @@
   let pendingRequests = [];
   let rejectTarget = null;
 
+  function updateRequestsBtnLabel() {
+    const badge = $('requests-badge');
+    badge.textContent = pendingRequests.length > 99 ? '99+' : String(pendingRequests.length);
+    badge.classList.toggle('hidden', pendingRequests.length === 0);
+  }
+
   async function loadPendingRequests() {
     try {
       pendingRequests = await api('GET', '/api/access-requests');
       renderRequestsTable();
+      updateRequestsBtnLabel();
     } catch (e) {
       showError(e);
+    }
+  }
+
+  async function refreshPendingRequestsCount() {
+    try {
+      pendingRequests = await api('GET', '/api/access-requests');
+      updateRequestsBtnLabel();
+    } catch (e) {
+      // Non-fatal — leave the label as-is if this fails.
     }
   }
 
