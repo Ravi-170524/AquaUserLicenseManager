@@ -4,9 +4,13 @@ import com.vassarlabs.aulm.dto.CreateUserRequest;
 import com.vassarlabs.aulm.dto.RenewLicenseRequest;
 import com.vassarlabs.aulm.dto.UpdateUserRequest;
 import com.vassarlabs.aulm.exception.ApiException;
+import com.vassarlabs.aulm.model.AccessRequestStatus;
+import com.vassarlabs.aulm.model.AccessRequestType;
 import com.vassarlabs.aulm.model.License;
 import com.vassarlabs.aulm.model.LicenseStatus;
+import com.vassarlabs.aulm.model.LicenseType;
 import com.vassarlabs.aulm.model.User;
+import com.vassarlabs.aulm.repository.AccessRequestRepository;
 import com.vassarlabs.aulm.repository.UserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -14,8 +18,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -23,15 +30,28 @@ import java.util.UUID;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final AccessRequestRepository accessRequestRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, AccessRequestRepository accessRequestRepository,
+                        PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.accessRequestRepository = accessRequestRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public List<User> listUsers() {
-        return userRepository.findAll();
+    /** Project-scoped admins only see their own project's users; superadmins see everyone. Not-yet-approved
+     *  registrations are excluded here — they only show up under Pending Requests until resolved. */
+    public List<User> listUsers(User admin) {
+        List<User> candidates = admin.isSuperAdmin()
+                ? userRepository.findAll()
+                : userRepository.findByProjectNameOrderByUsername(admin.getProjectName());
+        Set<Long> pendingRegistrationUserIds = new HashSet<>(
+                accessRequestRepository.findUserIdsByStatusAndRequestType(AccessRequestStatus.PENDING, AccessRequestType.REGISTRATION));
+        return candidates.stream()
+                .filter(u -> !pendingRegistrationUserIds.contains(u.getId()))
+                .sorted(Comparator.comparing(User::getProjectName).thenComparing(User::getUsername))
+                .toList();
     }
 
     public User getUser(Long id) {
@@ -59,8 +79,14 @@ public class UserService {
         license.setLicenseKey(UUID.randomUUID().toString());
         license.setLicenseType(request.licenseType());
         license.setStatus(LicenseStatus.ACTIVE);
-        license.setIssuedDate(LocalDate.now());
-        license.setExpiryDate(request.licenseType().computeExpiryDate(LocalDate.now()));
+        if (request.licenseType() == LicenseType.CUSTOM) {
+            validateCustomDates(request.customStartDate(), request.customExpiryDate());
+            license.setIssuedDate(request.customStartDate());
+            license.setExpiryDate(request.customExpiryDate());
+        } else {
+            license.setIssuedDate(LocalDate.now());
+            license.setExpiryDate(request.licenseType().computeExpiryDate(LocalDate.now()));
+        }
         user.setLicense(license);
 
         return userRepository.save(user);
@@ -116,8 +142,23 @@ public class UserService {
             throw new ApiException(HttpStatus.NOT_FOUND, "User has no license to renew");
         }
         license.setLicenseType(request.licenseType());
-        license.setExpiryDate(request.licenseType().computeExpiryDate(LocalDate.now()));
+        if (request.licenseType() == LicenseType.CUSTOM) {
+            validateCustomDates(request.customStartDate(), request.customExpiryDate());
+            license.setIssuedDate(request.customStartDate());
+            license.setExpiryDate(request.customExpiryDate());
+        } else {
+            license.setExpiryDate(request.licenseType().computeExpiryDate(LocalDate.now()));
+        }
         license.setStatus(request.revoke() ? LicenseStatus.REVOKED : LicenseStatus.ACTIVE);
         return userRepository.save(user);
+    }
+
+    private void validateCustomDates(LocalDate start, LocalDate end) {
+        if (start == null || end == null) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "Custom licenses require both a start and end date");
+        }
+        if (!end.isAfter(start)) {
+            throw new ApiException(HttpStatus.BAD_REQUEST, "The custom end date must be after the start date");
+        }
     }
 }

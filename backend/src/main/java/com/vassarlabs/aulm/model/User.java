@@ -40,6 +40,10 @@ public class User {
     @Column(nullable = false)
     private boolean admin = false;
 
+    /** Global role, independent of project scope: can create/manage the list of projects. */
+    @Column(nullable = false)
+    private boolean superAdmin = false;
+
     @ElementCollection(targetClass = PermissionType.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "user_permissions", joinColumns = @JoinColumn(name = "user_id"))
     @Enumerated(EnumType.STRING)
@@ -118,6 +122,14 @@ public class User {
 
     public void setAdmin(boolean admin) {
         this.admin = admin;
+    }
+
+    public boolean isSuperAdmin() {
+        return superAdmin;
+    }
+
+    public void setSuperAdmin(boolean superAdmin) {
+        this.superAdmin = superAdmin;
     }
 
     public Set<PermissionType> getPermissions() {

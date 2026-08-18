@@ -6,6 +6,7 @@ import com.vassarlabs.aulm.model.AccessRequestType;
 import com.vassarlabs.aulm.model.LicenseType;
 import com.vassarlabs.aulm.model.PermissionType;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -14,9 +15,12 @@ public class AccessRequestResponse {
     private Long userId;
     private String username;
     private String projectName;
+    private String assignedAdminUsername;
     private AccessRequestType requestType;
     private AccessRequestStatus status;
     private LicenseType requestedLicenseType;
+    private LocalDate requestedStartDate;
+    private LocalDate requestedExpiryDate;
     private Set<PermissionType> requestedPermissions;
     private Set<PermissionType> currentPermissions;
     private String note;
@@ -30,9 +34,12 @@ public class AccessRequestResponse {
         dto.userId = request.getUser().getId();
         dto.username = request.getUser().getUsername();
         dto.projectName = request.getUser().getProjectName();
+        dto.assignedAdminUsername = request.getAssignedAdmin() != null ? request.getAssignedAdmin().getUsername() : null;
         dto.requestType = request.getRequestType();
         dto.status = request.getStatus();
         dto.requestedLicenseType = request.getRequestedLicenseType();
+        dto.requestedStartDate = request.getRequestedStartDate();
+        dto.requestedExpiryDate = request.getRequestedExpiryDate();
         dto.requestedPermissions = request.getRequestedPermissions();
         dto.currentPermissions = request.getUser().getPermissions();
         dto.note = request.getNote();
@@ -58,6 +65,10 @@ public class AccessRequestResponse {
         return projectName;
     }
 
+    public String getAssignedAdminUsername() {
+        return assignedAdminUsername;
+    }
+
     public AccessRequestType getRequestType() {
         return requestType;
     }
@@ -68,6 +79,14 @@ public class AccessRequestResponse {
 
     public LicenseType getRequestedLicenseType() {
         return requestedLicenseType;
+    }
+
+    public LocalDate getRequestedStartDate() {
+        return requestedStartDate;
+    }
+
+    public LocalDate getRequestedExpiryDate() {
+        return requestedExpiryDate;
     }
 
     public Set<PermissionType> getRequestedPermissions() {

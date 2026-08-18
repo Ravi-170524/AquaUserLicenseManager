@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(java -version)",
-      "Bash(mvn -version)"
+      "Bash(mvn -version)",
+      "Skill(update-config)",
+      "Skill(update-config:*)"
     ]
   }
 }

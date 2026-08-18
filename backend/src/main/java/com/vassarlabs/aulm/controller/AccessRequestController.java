@@ -36,19 +36,21 @@ public class AccessRequestController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public List<AccessRequestResponse> listPending() {
-        return accessRequestService.listPending().stream().map(AccessRequestResponse::from).toList();
+    public List<AccessRequestResponse> listPending(@AuthenticationPrincipal User admin) {
+        return accessRequestService.listPending(admin).stream().map(AccessRequestResponse::from).toList();
     }
 
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
-    public AccessRequestResponse approve(@PathVariable("id") Long id, @Valid @RequestBody ApproveAccessRequestRequest request) {
-        return AccessRequestResponse.from(accessRequestService.approve(id, request));
+    public AccessRequestResponse approve(@PathVariable("id") Long id, @Valid @RequestBody ApproveAccessRequestRequest request,
+                                          @AuthenticationPrincipal User admin) {
+        return AccessRequestResponse.from(accessRequestService.approve(id, request, admin));
     }
 
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
-    public AccessRequestResponse reject(@PathVariable("id") Long id, @RequestBody RejectAccessRequestRequest request) {
-        return AccessRequestResponse.from(accessRequestService.reject(id, request));
+    public AccessRequestResponse reject(@PathVariable("id") Long id, @RequestBody RejectAccessRequestRequest request,
+                                         @AuthenticationPrincipal User admin) {
+        return AccessRequestResponse.from(accessRequestService.reject(id, request, admin));
     }
 }

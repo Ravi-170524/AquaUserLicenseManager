@@ -5,12 +5,16 @@ import com.vassarlabs.aulm.model.LicenseType;
 import com.vassarlabs.aulm.model.PermissionType;
 import jakarta.validation.constraints.NotNull;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 public record CreateAccessRequestRequest(
         @NotNull AccessRequestType requestType,
         LicenseType requestedLicenseType,
+        LocalDate requestedStartDate,
+        LocalDate requestedExpiryDate,
         Set<PermissionType> requestedPermissions,
-        String note
+        String note,
+        @NotNull Long assignedAdminId
 ) {
 }

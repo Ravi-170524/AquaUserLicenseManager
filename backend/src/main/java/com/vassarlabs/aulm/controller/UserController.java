@@ -9,6 +9,7 @@ import com.vassarlabs.aulm.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,8 +26,8 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserResponse> listUsers() {
-        return userService.listUsers().stream().map(UserResponse::from).toList();
+    public List<UserResponse> listUsers(@AuthenticationPrincipal User admin) {
+        return userService.listUsers(admin).stream().map(UserResponse::from).toList();
     }
 
     @GetMapping("/{id}")

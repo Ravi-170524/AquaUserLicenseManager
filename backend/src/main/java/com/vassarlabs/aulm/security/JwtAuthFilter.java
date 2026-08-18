@@ -50,6 +50,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         if (user.isAdmin()) {
                             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
                         }
+                        if (user.isSuperAdmin()) {
+                            authorities.add(new SimpleGrantedAuthority("ROLE_SUPERADMIN"));
+                        }
                         for (PermissionType permission : user.getPermissions()) {
                             authorities.add(new SimpleGrantedAuthority("PERM_" + permission.name()));
                         }

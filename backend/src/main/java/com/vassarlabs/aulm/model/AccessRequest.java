@@ -2,6 +2,7 @@ package com.vassarlabs.aulm.model;
 
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.EnumSet;
 import java.util.Set;
@@ -14,9 +15,14 @@ public class AccessRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    /** The admin the requester chose to send this to. Informational only — every admin can still see and resolve any request. */
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "assigned_admin_id")
+    private User assignedAdmin;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -28,6 +34,13 @@ public class AccessRequest {
 
     @Enumerated(EnumType.STRING)
     private LicenseType requestedLicenseType;
+
+    /** Only set when requestedLicenseType is CUSTOM. */
+    @Column(name = "requested_start_date")
+    private LocalDate requestedStartDate;
+
+    @Column(name = "requested_expiry_date")
+    private LocalDate requestedExpiryDate;
 
     @ElementCollection(targetClass = PermissionType.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "access_request_permissions", joinColumns = @JoinColumn(name = "access_request_id"))
@@ -58,6 +71,14 @@ public class AccessRequest {
         this.user = user;
     }
 
+    public User getAssignedAdmin() {
+        return assignedAdmin;
+    }
+
+    public void setAssignedAdmin(User assignedAdmin) {
+        this.assignedAdmin = assignedAdmin;
+    }
+
     public AccessRequestType getRequestType() {
         return requestType;
     }
@@ -80,6 +101,22 @@ public class AccessRequest {
 
     public void setRequestedLicenseType(LicenseType requestedLicenseType) {
         this.requestedLicenseType = requestedLicenseType;
+    }
+
+    public LocalDate getRequestedStartDate() {
+        return requestedStartDate;
+    }
+
+    public void setRequestedStartDate(LocalDate requestedStartDate) {
+        this.requestedStartDate = requestedStartDate;
+    }
+
+    public LocalDate getRequestedExpiryDate() {
+        return requestedExpiryDate;
+    }
+
+    public void setRequestedExpiryDate(LocalDate requestedExpiryDate) {
+        this.requestedExpiryDate = requestedExpiryDate;
     }
 
     public Set<PermissionType> getRequestedPermissions() {

@@ -4,7 +4,9 @@ import com.vassarlabs.aulm.model.License;
 import com.vassarlabs.aulm.model.LicenseStatus;
 import com.vassarlabs.aulm.model.LicenseType;
 import com.vassarlabs.aulm.model.PermissionType;
+import com.vassarlabs.aulm.model.Project;
 import com.vassarlabs.aulm.model.User;
+import com.vassarlabs.aulm.repository.ProjectRepository;
 import com.vassarlabs.aulm.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,17 +28,26 @@ public class DataSeeder implements CommandLineRunner {
     private static final String DEFAULT_ADMIN_USERNAME = "admin";
     private static final String DEFAULT_ADMIN_PASSWORD = "admin123";
     private static final String DEFAULT_ADMIN_PROJECT = "AULM";
+    private static final String DEFAULT_ADMIN_GMAIL = "bipin.kumar@vassarlabs.com";
 
     private final UserRepository userRepository;
+    private final ProjectRepository projectRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public DataSeeder(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public DataSeeder(UserRepository userRepository, ProjectRepository projectRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.projectRepository = projectRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) {
+        if (!projectRepository.existsByName(DEFAULT_ADMIN_PROJECT)) {
+            Project project = new Project();
+            project.setName(DEFAULT_ADMIN_PROJECT);
+            projectRepository.save(project);
+        }
+
         if (userRepository.existsByUsernameAndProjectName(DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_PROJECT)) {
             return;
         }
@@ -44,9 +55,11 @@ public class DataSeeder implements CommandLineRunner {
         User admin = new User();
         admin.setUsername(DEFAULT_ADMIN_USERNAME);
         admin.setPasswordHash(passwordEncoder.encode(DEFAULT_ADMIN_PASSWORD));
+        admin.setEmail(DEFAULT_ADMIN_GMAIL);
         admin.setFullName("Administrator");
         admin.setProjectName(DEFAULT_ADMIN_PROJECT);
         admin.setAdmin(true);
+        admin.setSuperAdmin(true);
         admin.setPermissions(EnumSet.of(PermissionType.ACCESS, PermissionType.MODIFY, PermissionType.APPROVE));
 
         License license = new License();

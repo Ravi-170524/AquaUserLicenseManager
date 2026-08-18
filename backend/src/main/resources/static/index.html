@@ -116,6 +116,42 @@
   .auth-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--text-muted); }
   .status-panel { background: var(--card); padding: 30px 32px; border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); }
   .pending-note { margin-top: 16px; padding: 12px 14px; background: #fff8e6; border: 1px solid #f0d896; border-radius: 8px; font-size: 13px; color: #6b4f10; }
+
+  .form-row { display: flex; align-items: flex-start; gap: 14px; margin: 14px 0; }
+  .form-row > label { flex: 0 0 150px; margin: 0; padding-top: 9px; }
+  .form-row > .field { flex: 1; min-width: 0; }
+  .form-row .form-hint { margin: 6px 0 0; }
+  @media (max-width: 600px) {
+    .form-row { flex-direction: column; gap: 4px; }
+    .form-row > label { flex: none; padding-top: 0; }
+  }
+
+  .request-panel {
+    margin-top: 22px; padding: 20px 22px 22px; border-radius: 10px;
+    background: #f4f8ff; border: 1px solid #d7e4f7; border-left: 4px solid var(--navy-light);
+  }
+  .request-panel > h3 {
+    margin: 0 0 16px; font-size: 13px; font-weight: 700; color: var(--navy);
+    text-transform: uppercase; letter-spacing: 0.4px;
+  }
+
+  .custom-date-box {
+    margin-top: 10px; padding: 12px 14px 2px; border-radius: 8px; background: #fff8e6; border: 1px solid #f0d896;
+  }
+
+  .perm-chip-row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .perm-chip {
+    display: flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 999px;
+    border: 1.5px solid var(--border); font-size: 13px; font-weight: 600; text-transform: none;
+    letter-spacing: 0; cursor: pointer; margin: 0; background: #fff; transition: background 0.15s, border-color 0.15s;
+  }
+  .perm-chip input[type=checkbox] { margin: 0; width: auto; accent-color: currentColor; }
+  .perm-chip.access { color: #1d64c9; }
+  .perm-chip.access:has(input:checked) { background: #e6f0fd; border-color: #1d64c9; }
+  .perm-chip.modify { color: #b3720b; }
+  .perm-chip.modify:has(input:checked) { background: #fdf3e1; border-color: #b3720b; }
+  .perm-chip.approve { color: #1a7f37; }
+  .perm-chip.approve:has(input:checked) { background: #e6f6ea; border-color: #1a7f37; }
 </style>
 </head>
 <body>
@@ -132,7 +168,7 @@
     <label for="login-username">Username</label>
     <input type="text" id="login-username" autocomplete="username">
     <label for="login-project">Project name</label>
-    <input type="text" id="login-project">
+    <select id="login-project"><option value="">Select a project</option></select>
     <label for="login-password">Password</label>
     <input type="password" id="login-password" autocomplete="current-password">
     <div class="field-error" id="login-error"></div>
@@ -146,7 +182,7 @@
     <label class="required" for="fp-username">Username</label>
     <input type="text" id="fp-username" autocomplete="username">
     <label class="required" for="fp-project">Project name</label>
-    <input type="text" id="fp-project">
+    <select id="fp-project"><option value="">Select a project</option></select>
     <label class="required" for="fp-email">Email</label>
     <input type="email" id="fp-email" autocomplete="email">
     <div class="form-hint">We'll send a reset link to this email if it matches the account on file.</div>
@@ -172,16 +208,33 @@
     <label class="required" for="reg-username">Username</label>
     <input type="text" id="reg-username" autocomplete="username">
     <label class="required" for="reg-project">Project name</label>
-    <input type="text" id="reg-project">
+    <select id="reg-project"><option value="">Select a project</option></select>
     <label class="required" for="reg-password">Password</label>
     <input type="password" id="reg-password" autocomplete="new-password">
     <label for="reg-fullname">Full name</label>
     <input type="text" id="reg-fullname">
-    <label for="reg-email">Email</label>
-    <input type="email" id="reg-email">
+    <label class="required" for="reg-email">Email</label>
+    <input type="email" id="reg-email" autocomplete="email">
     <label for="reg-license-type">Requested license type</label>
     <select id="reg-license-type">
-      <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
+      <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option><option>CUSTOM</option>
+    </select>
+    <div class="form-hint">Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never expires. Custom lets you request an exact date range.</div>
+    <div id="reg-custom-dates" class="hidden">
+      <label class="required" for="reg-custom-start">Start date</label>
+      <input type="date" id="reg-custom-start">
+      <label class="required" for="reg-custom-end">End date</label>
+      <input type="date" id="reg-custom-end">
+    </div>
+    <label>Requested permissions</label>
+    <div class="checkbox-row">
+      <label><input type="checkbox" id="reg-perm-access"> Access</label>
+      <label><input type="checkbox" id="reg-perm-modify"> Modify</label>
+      <label><input type="checkbox" id="reg-perm-approve"> Approve</label>
+    </div>
+    <label class="required" for="reg-admin">Send request to</label>
+    <select id="reg-admin">
+      <option value="" disabled selected>Select an admin</option>
     </select>
     <label for="reg-note">Note to admin (optional)</label>
     <input type="text" id="reg-note" placeholder="e.g. reason for access">
@@ -190,33 +243,66 @@
     <div class="auth-switch">Already have an account? <a href="#" id="show-login-link">Log in</a></div>
   </section>
 
-  <section id="my-access-view" class="hidden" style="max-width:420px; margin:0 auto; margin-top: min(10vh, 90px);">
+  <section id="my-access-view" class="hidden" style="max-width:560px; margin:0 auto; margin-top: min(10vh, 90px);">
     <div class="status-panel">
       <h2 style="margin:0 0 16px; font-size:20px; font-weight:600;">My Access</h2>
       <div id="my-access-status"></div>
-      <div id="my-access-request-section" class="hidden" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
-        <label for="ma-request-type">Request type</label>
-        <select id="ma-request-type">
-          <option value="RENEWAL">Request / renew license</option>
-          <option value="PERMISSION_CHANGE">Request permission change</option>
-        </select>
-        <div id="ma-license-fields">
-          <label for="ma-license-type">Requested license type</label>
-          <select id="ma-license-type">
-            <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
-          </select>
-          <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never.</div>
-        </div>
-        <div id="ma-permission-fields" class="hidden">
-          <label>Requested permissions</label>
-          <div class="checkbox-row">
-            <label><input type="checkbox" id="ma-perm-access"> Access</label>
-            <label><input type="checkbox" id="ma-perm-modify"> Modify</label>
-            <label><input type="checkbox" id="ma-perm-approve"> Approve</label>
+      <div id="my-access-request-section" class="hidden request-panel">
+        <h3>New request</h3>
+        <div class="form-row">
+          <label for="ma-request-type">Request type</label>
+          <div class="field">
+            <select id="ma-request-type">
+              <option value="RENEWAL">Request / renew license</option>
+              <option value="PERMISSION_CHANGE">Request permission change</option>
+            </select>
           </div>
         </div>
-        <label for="ma-note">Note (optional)</label>
-        <input type="text" id="ma-note">
+        <div id="ma-license-fields">
+          <div class="form-row">
+            <label for="ma-license-type">License type</label>
+            <div class="field">
+              <select id="ma-license-type">
+                <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option><option>CUSTOM</option>
+              </select>
+              <div class="form-hint">Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never expires.</div>
+              <div id="ma-custom-dates" class="hidden custom-date-box">
+                <div class="form-row">
+                  <label class="required" for="ma-custom-start">Start date</label>
+                  <div class="field"><input type="date" id="ma-custom-start"></div>
+                </div>
+                <div class="form-row">
+                  <label class="required" for="ma-custom-end">End date</label>
+                  <div class="field"><input type="date" id="ma-custom-end"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="ma-permission-fields" class="hidden">
+          <div class="form-row">
+            <label>Permissions</label>
+            <div class="field">
+              <div class="perm-chip-row">
+                <label class="perm-chip access"><input type="checkbox" id="ma-perm-access"> Access</label>
+                <label class="perm-chip modify"><input type="checkbox" id="ma-perm-modify"> Modify</label>
+                <label class="perm-chip approve"><input type="checkbox" id="ma-perm-approve"> Approve</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="required" for="ma-admin">Send to</label>
+          <div class="field">
+            <select id="ma-admin">
+              <option value="" disabled selected>Select an admin</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="ma-note">Note</label>
+          <div class="field"><input type="text" id="ma-note" placeholder="Optional — reason for request"></div>
+        </div>
         <div class="field-error" id="my-access-error"></div>
         <button id="my-access-submit" style="width:100%; margin-top:10px;">Submit Request</button>
       </div>
@@ -234,6 +320,7 @@
       <button id="renew-btn" class="secondary" disabled>Renew License</button>
       <button id="delete-btn" class="danger" disabled>Delete</button>
       <button id="requests-btn" class="secondary">Pending Requests</button>
+      <button id="projects-btn" class="secondary hidden">Manage Projects</button>
       <div class="spacer"></div>
       <button id="refresh-btn" class="secondary">Refresh</button>
       <button id="logout-btn" class="secondary">Logout</button>
@@ -258,6 +345,15 @@
     <div id="status-line"></div>
   </section>
 
+  <section id="superadmin-view" class="hidden" style="max-width:420px; margin:0 auto; margin-top: min(10vh, 90px);">
+    <div class="status-panel">
+      <h2 style="margin:0 0 16px; font-size:20px; font-weight:600;">Superadmin</h2>
+      <div style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">You don't manage a specific project's users, but you can create new projects.</div>
+      <button id="superadmin-projects-btn" style="width:100%;">Manage Projects</button>
+      <button class="secondary" id="superadmin-logout" style="width:100%; margin-top:8px;">Logout</button>
+    </div>
+  </section>
+
 </main>
 
 <dialog id="user-dialog">
@@ -270,10 +366,10 @@
     <input type="password" id="uf-password">
     <label for="uf-fullname">Full name</label>
     <input type="text" id="uf-fullname">
-    <label for="uf-email">Email</label>
+    <label id="uf-email-label" for="uf-email">Email</label>
     <input type="email" id="uf-email">
     <label class="required" for="uf-project">Project name</label>
-    <input type="text" id="uf-project">
+    <select id="uf-project"><option value="">Select a project</option></select>
     <label>Permissions</label>
     <div class="checkbox-row">
       <label><input type="checkbox" id="uf-perm-access"> Access</label>
@@ -289,9 +385,15 @@
     <div id="uf-license-fields">
       <label class="required" for="uf-license-type">License type</label>
       <select id="uf-license-type">
-        <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
+        <option>TRIAL</option><option selected>STANDARD</option><option>PREMIUM</option><option>ADMIN</option><option>CUSTOM</option>
       </select>
-      <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never.</div>
+      <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never. Custom lets you pick an exact date range.</div>
+      <div id="uf-custom-dates" class="hidden">
+        <label class="required" for="uf-custom-start">Start date</label>
+        <input type="date" id="uf-custom-start">
+        <label class="required" for="uf-custom-end">End date</label>
+        <input type="date" id="uf-custom-end">
+      </div>
     </div>
     <div class="field-error" id="user-dialog-error"></div>
     <div class="dialog-actions">
@@ -306,9 +408,15 @@
     <h3 id="renew-dialog-title">Renew License</h3>
     <label for="rf-license-type">License type</label>
     <select id="rf-license-type">
-      <option>TRIAL</option><option>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
+      <option>TRIAL</option><option>STANDARD</option><option>PREMIUM</option><option>ADMIN</option><option>CUSTOM</option>
     </select>
-    <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never.</div>
+    <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never. Custom lets you pick an exact date range.</div>
+    <div id="rf-custom-dates" class="hidden">
+      <label class="required" for="rf-custom-start">Start date</label>
+      <input type="date" id="rf-custom-start">
+      <label class="required" for="rf-custom-end">End date</label>
+      <input type="date" id="rf-custom-end">
+    </div>
     <div class="checkbox-row">
       <label><input type="checkbox" id="rf-revoke"> Revoke this license (blocks login immediately)</label>
     </div>
@@ -320,13 +428,13 @@
   </div>
 </dialog>
 
-<dialog id="requests-dialog" style="width:780px;">
+<dialog id="requests-dialog" style="width:920px;">
   <div class="dialog-body">
     <h3>Pending Requests</h3>
     <div class="table-card" style="margin-bottom:10px;">
       <table>
         <thead>
-          <tr><th>Username</th><th>Project</th><th>Type</th><th>Requested</th><th>Note</th><th>Actions</th></tr>
+          <tr><th>Username</th><th>Project</th><th>Type</th><th>Requested</th><th>Permissions</th><th>Note</th><th>Actions</th></tr>
         </thead>
         <tbody id="requests-table-body"></tbody>
       </table>
@@ -338,26 +446,21 @@
   </div>
 </dialog>
 
-<dialog id="approve-request-dialog">
+<dialog id="projects-dialog">
   <div class="dialog-body">
-    <h3>Approve Request</h3>
-    <div id="approve-license-fields">
-      <label class="required" for="ar-license-type">License type</label>
-      <select id="ar-license-type">
-        <option>TRIAL</option><option>STANDARD</option><option>PREMIUM</option><option>ADMIN</option>
-      </select>
-      <div class="form-hint">Expiry is set automatically: Trial = 1 week, Standard = 1 month, Premium = 1 year, Admin = never.</div>
+    <h3>Manage Projects</h3>
+    <div class="table-card" style="margin-bottom:14px;">
+      <table>
+        <thead><tr><th>Name</th><th>UUID</th></tr></thead>
+        <tbody id="projects-table-body"></tbody>
+      </table>
     </div>
-    <label>Permissions</label>
-    <div class="checkbox-row">
-      <label><input type="checkbox" id="ar-perm-access"> Access</label>
-      <label><input type="checkbox" id="ar-perm-modify"> Modify</label>
-      <label><input type="checkbox" id="ar-perm-approve"> Approve</label>
-    </div>
-    <div class="field-error" id="approve-request-error"></div>
+    <label class="required" for="new-project-name">New project name</label>
+    <input type="text" id="new-project-name" placeholder="e.g. Acme Corp">
+    <div class="field-error" id="projects-dialog-error"></div>
     <div class="dialog-actions">
-      <button class="secondary" id="approve-request-cancel">Cancel</button>
-      <button id="approve-request-save">Approve</button>
+      <button class="secondary" id="projects-dialog-close">Close</button>
+      <button id="add-project-button">Add Project</button>
     </div>
   </div>
 </dialog>
@@ -425,11 +528,13 @@
     $('reset-password-view').classList.add('hidden');
     $('my-access-view').classList.add('hidden');
     $('dashboard-view').classList.add('hidden');
+    $('superadmin-view').classList.add('hidden');
   }
 
   function showLoginView() {
     hideAllViews();
     $('login-view').classList.remove('hidden');
+    loadProjectOptions($('login-project'));
   }
 
   function doLogout() {
@@ -449,8 +554,13 @@
     hideAllViews();
     if (currentUser.admin) {
       $('dashboard-view').classList.remove('hidden');
-      $('who-line').textContent = 'Signed in as ' + currentUser.username + ' (admin)';
+      $('projects-btn').classList.toggle('hidden', !currentUser.superAdmin);
+      $('who-line').textContent = 'Signed in as ' + currentUser.username
+        + (currentUser.superAdmin ? ' (admin, superadmin)' : ' (admin)');
       await refresh();
+    } else if (currentUser.superAdmin) {
+      $('superadmin-view').classList.remove('hidden');
+      $('who-line').textContent = 'Signed in as ' + currentUser.username + ' (superadmin)';
     } else {
       $('who-line').textContent = 'Signed in as ' + currentUser.username;
       await showMyAccess();
@@ -483,13 +593,68 @@
 
   $('logout-btn').addEventListener('click', doLogout);
   $('my-access-logout').addEventListener('click', doLogout);
+  $('superadmin-logout').addEventListener('click', doLogout);
+
+  // ---- Project picker (used at login, register, forgot password, and Add User) ----
+  async function loadProjectOptions(selectEl, selectedValue) {
+    const current = selectedValue !== undefined ? selectedValue : selectEl.value;
+    selectEl.innerHTML = '<option value="">Select a project</option>';
+    try {
+      const projects = await api('GET', '/api/projects');
+      for (const p of projects) {
+        const opt = document.createElement('option');
+        opt.value = p.name;
+        opt.textContent = p.name;
+        selectEl.appendChild(opt);
+      }
+    } catch (e) {
+      // Leave just the placeholder if this fails.
+    }
+    if (current) selectEl.value = current;
+  }
+
+  // ---- Admin picker (used at registration and on the My Access request form) ----
+  async function loadAdminOptions(selectEl, projectName) {
+    selectEl.innerHTML = '<option value="" disabled selected>Select an admin</option>';
+    if (!projectName) return;
+    try {
+      const admins = await api('GET', '/api/auth/admins?projectName=' + encodeURIComponent(projectName));
+      for (const a of admins) {
+        const opt = document.createElement('option');
+        opt.value = a.id;
+        let label = a.fullName ? `${a.username} (${a.fullName})` : a.username;
+        if (a.projectName !== projectName) {
+          label += ` — ${a.projectName}`;
+        }
+        opt.textContent = label;
+        selectEl.appendChild(opt);
+      }
+      if (admins.length > 0) {
+        selectEl.value = admins[0].id;
+      }
+    } catch (e) {
+      // Leave just the placeholder if the lookup fails (e.g. brand new project).
+    }
+  }
 
   // ---- Register ----
-  $('show-register-link').addEventListener('click', (e) => {
+  $('show-register-link').addEventListener('click', async (e) => {
     e.preventDefault();
     $('register-error').textContent = '';
     $('login-view').classList.add('hidden');
     $('register-view').classList.remove('hidden');
+    $('reg-license-type').value = 'STANDARD';
+    $('reg-custom-start').value = '';
+    $('reg-custom-end').value = '';
+    $('reg-custom-dates').classList.add('hidden');
+    await loadProjectOptions($('reg-project'));
+    loadAdminOptions($('reg-admin'), $('reg-project').value);
+  });
+  $('reg-project').addEventListener('change', () => {
+    loadAdminOptions($('reg-admin'), $('reg-project').value);
+  });
+  $('reg-license-type').addEventListener('change', () => {
+    $('reg-custom-dates').classList.toggle('hidden', $('reg-license-type').value !== 'CUSTOM');
   });
   $('show-login-link').addEventListener('click', (e) => {
     e.preventDefault();
@@ -502,10 +667,10 @@
     e.preventDefault();
     $('forgot-password-error').textContent = '';
     $('fp-username').value = '';
-    $('fp-project').value = '';
     $('fp-email').value = '';
     hideAllViews();
     $('forgot-password-view').classList.remove('hidden');
+    loadProjectOptions($('fp-project'), '');
   });
   $('show-login-from-forgot-link').addEventListener('click', (e) => {
     e.preventDefault();
@@ -584,21 +749,43 @@
     const username = $('reg-username').value.trim();
     const projectName = $('reg-project').value.trim();
     const password = $('reg-password').value;
+    const email = $('reg-email').value.trim();
     $('register-error').textContent = '';
-    if (!username || !projectName || !password) {
-      $('register-error').textContent = 'Username, project name and password are required.';
+    if (!username || !projectName || !password || !email) {
+      $('register-error').textContent = 'Username, project name, password and email are required.';
+      return;
+    }
+    if (!$('reg-admin').value) {
+      $('register-error').textContent = 'Please select an admin to send the request to.';
+      return;
+    }
+    const regIsCustom = $('reg-license-type').value === 'CUSTOM';
+    if (regIsCustom && (!$('reg-custom-start').value || !$('reg-custom-end').value)) {
+      $('register-error').textContent = 'Custom licenses require both a start and end date.';
+      return;
+    }
+    if (regIsCustom && $('reg-custom-end').value <= $('reg-custom-start').value) {
+      $('register-error').textContent = 'The end date must be after the start date.';
       return;
     }
     $('register-button').disabled = true;
     try {
+      const permissions = [];
+      if ($('reg-perm-access').checked) permissions.push('ACCESS');
+      if ($('reg-perm-modify').checked) permissions.push('MODIFY');
+      if ($('reg-perm-approve').checked) permissions.push('APPROVE');
       const payload = {
         username,
         password,
         projectName,
         fullName: $('reg-fullname').value,
-        email: $('reg-email').value,
+        email,
         requestedLicenseType: $('reg-license-type').value,
+        requestedStartDate: regIsCustom ? $('reg-custom-start').value : null,
+        requestedExpiryDate: regIsCustom ? $('reg-custom-end').value : null,
+        requestedPermissions: permissions,
         note: $('reg-note').value,
+        assignedAdminId: Number($('reg-admin').value),
       };
       const resp = await api('POST', '/api/auth/register', payload);
       token = resp.token;
@@ -620,6 +807,9 @@
     $('ma-permission-fields').classList.toggle('hidden', type !== 'PERMISSION_CHANGE');
   }
   $('ma-request-type').addEventListener('change', updateMaFieldsVisibility);
+  $('ma-license-type').addEventListener('change', () => {
+    $('ma-custom-dates').classList.toggle('hidden', $('ma-license-type').value !== 'CUSTOM');
+  });
 
   async function showMyAccess() {
     $('my-access-view').classList.remove('hidden');
@@ -638,6 +828,10 @@
     const pending = myRequests.find(r => r.status === 'PENDING');
     const licenseValid = currentUser.licenseValid;
     let html = '';
+    html += `<div style="margin-bottom:14px;">
+      <div style="font-weight:600; font-size:15px;">${escapeHtml(currentUser.fullName || currentUser.username)}</div>
+      <div style="color:var(--text-muted); font-size:13px;">${escapeHtml(currentUser.username)} &middot; ${escapeHtml(currentUser.projectName)}${currentUser.email ? ' &middot; ' + escapeHtml(currentUser.email) : ''}</div>
+    </div>`;
     if (licenseValid) {
       html += `<span class="badge status-active">License active</span>`;
       html += `<div style="margin-top:10px; color:var(--text-muted); font-size:13px;">Type: ${currentUser.licenseType || '-'} &middot; Expiry: ${currentUser.expiryDate || 'Never'}</div>`;
@@ -653,11 +847,16 @@
     $('my-access-request-section').classList.toggle('hidden', !!pending);
     if (!pending) {
       $('ma-request-type').value = 'RENEWAL';
+      $('ma-license-type').value = 'STANDARD';
+      $('ma-custom-start').value = '';
+      $('ma-custom-end').value = '';
+      $('ma-custom-dates').classList.add('hidden');
       $('ma-perm-access').checked = false;
       $('ma-perm-modify').checked = false;
       $('ma-perm-approve').checked = false;
       $('ma-note').value = '';
       updateMaFieldsVisibility();
+      loadAdminOptions($('ma-admin'), currentUser.projectName);
     }
   }
 
@@ -672,15 +871,34 @@
 
   $('my-access-submit').addEventListener('click', async () => {
     $('my-access-error').textContent = '';
+    if (!$('ma-admin').value) {
+      $('my-access-error').textContent = 'Please select an admin to send the request to.';
+      return;
+    }
     const type = $('ma-request-type').value;
     const permissions = [];
     if ($('ma-perm-access').checked) permissions.push('ACCESS');
     if ($('ma-perm-modify').checked) permissions.push('MODIFY');
     if ($('ma-perm-approve').checked) permissions.push('APPROVE');
+    const maIsCustom = type === 'RENEWAL' && $('ma-license-type').value === 'CUSTOM';
+    if (maIsCustom && (!$('ma-custom-start').value || !$('ma-custom-end').value)) {
+      $('my-access-error').textContent = 'Custom licenses require both a start and end date.';
+      return;
+    }
+    if (maIsCustom && $('ma-custom-end').value <= $('ma-custom-start').value) {
+      $('my-access-error').textContent = 'The end date must be after the start date.';
+      return;
+    }
 
-    const payload = { requestType: type, note: $('ma-note').value };
+    const payload = {
+      requestType: type,
+      note: $('ma-note').value,
+      assignedAdminId: Number($('ma-admin').value),
+    };
     if (type === 'RENEWAL') {
       payload.requestedLicenseType = $('ma-license-type').value;
+      payload.requestedStartDate = maIsCustom ? $('ma-custom-start').value : null;
+      payload.requestedExpiryDate = maIsCustom ? $('ma-custom-end').value : null;
     } else {
       payload.requestedPermissions = permissions;
     }
@@ -766,20 +984,24 @@
   const userDialog = $('user-dialog');
   let userDialogMode = 'create';
 
-  function openUserDialog(mode, user) {
+  async function openUserDialog(mode, user) {
     userDialogMode = mode;
     $('user-dialog-error').textContent = '';
     $('user-dialog-title').textContent = mode === 'create' ? 'Add User' : 'Edit User';
     $('uf-password-label').textContent = mode === 'create' ? 'Password' : 'New password (leave blank to keep)';
     $('uf-password-label').classList.toggle('required', mode === 'create');
+    $('uf-email-label').classList.toggle('required', mode === 'create');
     $('uf-password').value = '';
+    $('uf-custom-start').value = '';
+    $('uf-custom-end').value = '';
+    $('uf-custom-dates').classList.add('hidden');
 
     if (mode === 'edit' && user) {
       $('uf-username').value = user.username;
       $('uf-username').disabled = true;
       $('uf-fullname').value = user.fullName || '';
       $('uf-email').value = user.email || '';
-      $('uf-project').value = user.projectName || '';
+      await loadProjectOptions($('uf-project'), user.projectName || '');
       $('uf-admin').checked = !!user.admin;
       $('uf-perm-access').checked = (user.permissions || []).includes('ACCESS');
       $('uf-perm-modify').checked = (user.permissions || []).includes('MODIFY');
@@ -792,7 +1014,7 @@
       $('uf-username').disabled = false;
       $('uf-fullname').value = '';
       $('uf-email').value = '';
-      $('uf-project').value = '';
+      await loadProjectOptions($('uf-project'), '');
       $('uf-admin').checked = false;
       $('uf-perm-access').checked = false;
       $('uf-perm-modify').checked = false;
@@ -810,14 +1032,23 @@
     if (u) openUserDialog('edit', u);
   });
   $('user-dialog-cancel').addEventListener('click', () => userDialog.close());
+  $('uf-license-type').addEventListener('change', () => {
+    $('uf-custom-dates').classList.toggle('hidden', $('uf-license-type').value !== 'CUSTOM');
+  });
 
   $('user-dialog-save').addEventListener('click', async () => {
     const username = $('uf-username').value.trim();
     const password = $('uf-password').value;
     $('user-dialog-error').textContent = '';
     if (!username) { $('user-dialog-error').textContent = 'Username is required.'; return; }
-    if (!$('uf-project').value.trim()) { $('user-dialog-error').textContent = 'Project name is required.'; return; }
+    if (!$('uf-project').value) { $('user-dialog-error').textContent = 'Project name is required.'; return; }
     if (userDialogMode === 'create' && !password) { $('user-dialog-error').textContent = 'Password is required.'; return; }
+    if (userDialogMode === 'create' && !$('uf-email').value.trim()) { $('user-dialog-error').textContent = 'Email is required.'; return; }
+    if (userDialogMode === 'create' && $('uf-license-type').value === 'CUSTOM'
+        && (!$('uf-custom-start').value || !$('uf-custom-end').value)) {
+      $('user-dialog-error').textContent = 'Custom licenses require both a start and end date.';
+      return;
+    }
 
     const permissions = [];
     if ($('uf-perm-access').checked) permissions.push('ACCESS');
@@ -836,6 +1067,8 @@
           admin: $('uf-admin').checked,
           permissions,
           licenseType: $('uf-license-type').value,
+          customStartDate: $('uf-license-type').value === 'CUSTOM' ? $('uf-custom-start').value : null,
+          customExpiryDate: $('uf-license-type').value === 'CUSTOM' ? $('uf-custom-end').value : null,
         };
         const created = await api('POST', '/api/users', payload);
         userDialog.close();
@@ -882,12 +1115,19 @@
   // ---- Renew license dialog ----
   const renewDialog = $('renew-dialog');
 
+  $('rf-license-type').addEventListener('change', () => {
+    $('rf-custom-dates').classList.toggle('hidden', $('rf-license-type').value !== 'CUSTOM');
+  });
+
   $('renew-btn').addEventListener('click', () => {
     const u = selectedUser();
     if (!u) return;
     $('renew-dialog-error').textContent = '';
     $('renew-dialog-title').textContent = 'Renew License - ' + u.username;
     $('rf-license-type').value = u.licenseType || 'STANDARD';
+    $('rf-custom-start').value = u.issuedDate || '';
+    $('rf-custom-end').value = u.expiryDate || '';
+    $('rf-custom-dates').classList.toggle('hidden', $('rf-license-type').value !== 'CUSTOM');
     $('rf-revoke').checked = false;
     renewDialog.showModal();
   });
@@ -897,8 +1137,15 @@
     const u = selectedUser();
     if (!u) return;
     $('renew-dialog-error').textContent = '';
+    const isCustom = $('rf-license-type').value === 'CUSTOM';
+    if (isCustom && (!$('rf-custom-start').value || !$('rf-custom-end').value)) {
+      $('renew-dialog-error').textContent = 'Custom licenses require both a start and end date.';
+      return;
+    }
     const payload = {
       licenseType: $('rf-license-type').value,
+      customStartDate: isCustom ? $('rf-custom-start').value : null,
+      customExpiryDate: isCustom ? $('rf-custom-end').value : null,
       revoke: $('rf-revoke').checked,
     };
     $('renew-dialog-save').disabled = true;
@@ -916,10 +1163,8 @@
 
   // ---- Pending Requests (admin) ----
   const requestsDialog = $('requests-dialog');
-  const approveDialog = $('approve-request-dialog');
   const rejectDialog = $('reject-request-dialog');
   let pendingRequests = [];
-  let approveTarget = null;
   let rejectTarget = null;
 
   async function loadPendingRequests() {
@@ -938,20 +1183,26 @@
     for (const r of pendingRequests) {
       const tr = document.createElement('tr');
       const requested = r.requestType === 'PERMISSION_CHANGE'
-        ? ((r.requestedPermissions || []).join(', ') || 'None')
-        : (r.requestedLicenseType || '-');
+        ? '-'
+        : (r.requestedLicenseType === 'CUSTOM'
+            ? `CUSTOM (${r.requestedStartDate || '?'} to ${r.requestedExpiryDate || '?'})`
+            : (r.requestedLicenseType || '-'));
+      const perms = (r.requestedPermissions && r.requestedPermissions.length)
+        ? r.requestedPermissions
+        : (r.currentPermissions || []);
       tr.innerHTML = `
         <td>${escapeHtml(r.username)}</td>
         <td>${escapeHtml(r.projectName)}</td>
         <td>${escapeHtml(r.requestType.replace('_', ' '))}</td>
         <td>${escapeHtml(requested)}</td>
+        <td>${escapeHtml(perms.length ? perms.join(', ') : 'None')}</td>
         <td>${escapeHtml(r.note || '')}</td>
         <td></td>
       `;
       const actionsTd = tr.lastElementChild;
       const approveBtn = document.createElement('button');
       approveBtn.textContent = 'Approve';
-      approveBtn.addEventListener('click', () => openApproveDialog(r));
+      approveBtn.addEventListener('click', () => quickApprove(r, approveBtn));
       const rejectBtn = document.createElement('button');
       rejectBtn.textContent = 'Reject';
       rejectBtn.className = 'danger';
@@ -968,46 +1219,30 @@
   });
   $('requests-dialog-close').addEventListener('click', () => requestsDialog.close());
 
-  function openApproveDialog(request) {
-    approveTarget = request;
-    $('approve-request-error').textContent = '';
-    const isPermissionOnly = request.requestType === 'PERMISSION_CHANGE';
-    $('approve-license-fields').classList.toggle('hidden', isPermissionOnly);
-    $('ar-license-type').value = request.requestedLicenseType || 'STANDARD';
-    const perms = isPermissionOnly ? (request.requestedPermissions || []) : (request.currentPermissions || []);
-    $('ar-perm-access').checked = perms.includes('ACCESS');
-    $('ar-perm-modify').checked = perms.includes('MODIFY');
-    $('ar-perm-approve').checked = perms.includes('APPROVE');
-    approveDialog.showModal();
-  }
-  $('approve-request-cancel').addEventListener('click', () => approveDialog.close());
-
-  $('approve-request-save').addEventListener('click', async () => {
-    if (!approveTarget) return;
-    $('approve-request-error').textContent = '';
-    const isPermissionOnly = approveTarget.requestType === 'PERMISSION_CHANGE';
-    const permissions = [];
-    if ($('ar-perm-access').checked) permissions.push('ACCESS');
-    if ($('ar-perm-modify').checked) permissions.push('MODIFY');
-    if ($('ar-perm-approve').checked) permissions.push('APPROVE');
-
-    const payload = { permissions };
-    if (!isPermissionOnly) {
-      payload.licenseType = $('ar-license-type').value;
+  /** Approves immediately using exactly what the requester asked for — no confirmation dialog. */
+  async function quickApprove(request, triggerBtn) {
+    const payload = {};
+    if (request.requestType !== 'RENEWAL') {
+      payload.permissions = request.requestedPermissions || [];
     }
-
-    $('approve-request-save').disabled = true;
+    if (request.requestType !== 'PERMISSION_CHANGE') {
+      payload.licenseType = request.requestedLicenseType;
+      if (request.requestedLicenseType === 'CUSTOM') {
+        payload.customStartDate = request.requestedStartDate;
+        payload.customExpiryDate = request.requestedExpiryDate;
+      }
+    }
+    triggerBtn.disabled = true;
     try {
-      await api('POST', '/api/access-requests/' + approveTarget.id + '/approve', payload);
-      approveDialog.close();
+      await api('POST', '/api/access-requests/' + request.id + '/approve', payload);
       await loadPendingRequests();
-      $('status-line').textContent = 'Approved request for ' + approveTarget.username;
+      await refresh();
+      $('status-line').textContent = 'Approved request for ' + request.username;
     } catch (e) {
-      $('approve-request-error').textContent = e.message;
-    } finally {
-      $('approve-request-save').disabled = false;
+      showError(e);
+      triggerBtn.disabled = false;
     }
-  });
+  }
 
   function openRejectDialog(request) {
     rejectTarget = request;
@@ -1023,6 +1258,7 @@
       await api('POST', '/api/access-requests/' + rejectTarget.id + '/reject', { reason: $('rr-reason').value });
       rejectDialog.close();
       await loadPendingRequests();
+      await refresh();
       $('status-line').textContent = 'Rejected request for ' + rejectTarget.username;
     } catch (e) {
       rejectDialog.close();
@@ -1032,6 +1268,54 @@
     }
   });
 
+  // ---- Manage Projects (superadmin) ----
+  const projectsDialog = $('projects-dialog');
+
+  async function openProjectsDialog() {
+    $('projects-dialog-error').textContent = '';
+    $('new-project-name').value = '';
+    await refreshProjectsTable();
+    projectsDialog.showModal();
+  }
+
+  async function refreshProjectsTable() {
+    const body = $('projects-table-body');
+    body.innerHTML = '<tr><td colspan="2">Loading...</td></tr>';
+    try {
+      const projects = await api('GET', '/api/projects');
+      body.innerHTML = '';
+      for (const p of projects) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(p.name)}</td><td>${escapeHtml(p.uuid)}</td>`;
+        body.appendChild(tr);
+      }
+    } catch (e) {
+      body.innerHTML = '';
+      $('projects-dialog-error').textContent = e.message;
+    }
+  }
+
+  $('projects-btn').addEventListener('click', openProjectsDialog);
+  $('superadmin-projects-btn').addEventListener('click', openProjectsDialog);
+  $('projects-dialog-close').addEventListener('click', () => projectsDialog.close());
+
+  $('add-project-button').addEventListener('click', async () => {
+    const name = $('new-project-name').value.trim();
+    $('projects-dialog-error').textContent = '';
+    if (!name) { $('projects-dialog-error').textContent = 'Project name is required.'; return; }
+    $('add-project-button').disabled = true;
+    try {
+      await api('POST', '/api/projects', { name });
+      $('new-project-name').value = '';
+      await refreshProjectsTable();
+    } catch (e) {
+      $('projects-dialog-error').textContent = e.message;
+    } finally {
+      $('add-project-button').disabled = false;
+    }
+  });
+
+  loadProjectOptions($('login-project'));
   checkForResetTokenInUrl();
 })();
 </script>

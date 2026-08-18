@@ -6,7 +6,9 @@ public enum LicenseType {
     TRIAL,
     STANDARD,
     PREMIUM,
-    ADMIN;
+    ADMIN,
+    /** Expiry is an explicit date range supplied by the admin, not computed here. */
+    CUSTOM;
 
     /** Null means the license never expires. */
     public LocalDate computeExpiryDate(LocalDate from) {
@@ -15,6 +17,7 @@ public enum LicenseType {
             case STANDARD -> from.plusMonths(1);
             case PREMIUM -> from.plusYears(1);
             case ADMIN -> null;
+            case CUSTOM -> throw new IllegalStateException("CUSTOM license requires an explicit start/end date");
         };
     }
 }

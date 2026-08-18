@@ -18,6 +18,7 @@ public class UserResponse {
     private String projectName;
     private boolean enabled;
     private boolean admin;
+    private boolean superAdmin;
     private Set<PermissionType> permissions;
     private String licenseKey;
     private LicenseType licenseType;
@@ -36,6 +37,7 @@ public class UserResponse {
         dto.projectName = user.getProjectName();
         dto.enabled = user.isEnabled();
         dto.admin = user.isAdmin();
+        dto.superAdmin = user.isSuperAdmin();
         dto.permissions = user.getPermissions();
         if (user.getLicense() != null) {
             dto.licenseKey = user.getLicense().getLicenseKey();
@@ -78,6 +80,10 @@ public class UserResponse {
 
     public boolean isAdmin() {
         return admin;
+    }
+
+    public boolean isSuperAdmin() {
+        return superAdmin;
     }
 
     public Set<PermissionType> getPermissions() {
