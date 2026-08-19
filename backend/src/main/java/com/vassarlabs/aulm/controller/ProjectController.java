@@ -24,12 +24,14 @@ public class ProjectController {
         this.projectService = projectService;
     }
 
+    /** Lists all projects — used to populate the project pickers on login/register/forgot-password. */
     @GetMapping
     public List<ProjectResponse> list() {
         log.info("GET /api/projects");
         return projectService.listProjects();
     }
 
+    /** Creates a new project (superadmin only). */
     @PostMapping
     @PreAuthorize("hasRole('SUPERADMIN')")
     @ResponseStatus(HttpStatus.CREATED)

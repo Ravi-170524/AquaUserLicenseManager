@@ -262,6 +262,9 @@ public class AccessRequestService {
                 license.setExpiryDate(request.licenseType().computeExpiryDate(LocalDate.now()));
             }
             license.setStatus(LicenseStatus.ACTIVE);
+            if (request.licenseType() == LicenseType.ADMIN) {
+                user.setAdmin(true);
+            }
         }
 
         if (request.permissions() != null) {

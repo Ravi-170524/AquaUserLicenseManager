@@ -50,12 +50,14 @@ public class AuthController {
         this.accessCheckService = accessCheckService;
     }
 
+    /** Verifies username/project/password and returns a JWT + profile. */
     @PostMapping("/login")
     public LoginResponse login(@Valid @RequestBody LoginRequest request) {
         log.info("POST /api/auth/login username={} project={}", request.username(), request.projectName());
         return authService.login(request);
     }
 
+    /** Self-service sign-up: creates the account plus a PENDING registration request, then logs the caller straight in. */
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public LoginResponse register(@Valid @RequestBody RegisterRequest request) {
@@ -64,18 +66,21 @@ public class AuthController {
         return authService.issueTokenFor(user);
     }
 
+    /** Returns the currently authenticated user's own profile. */
     @GetMapping("/me")
     public UserResponse me(@AuthenticationPrincipal User user) {
         log.info("GET /api/auth/me username={} project={}", user.getUsername(), user.getProjectName());
         return UserResponse.from(user);
     }
 
+    /** Lists admins eligible to receive an access request for a project, for the "send request to" picker. */
     @GetMapping("/admins")
     public List<AdminSummary> admins(@RequestParam String projectName) {
         log.info("GET /api/auth/admins project={}", projectName);
         return accessRequestService.listAdmins(projectName);
     }
 
+    /** Read-only check other systems call to ask "can this user do X in this project?". */
     @GetMapping("/access-check")
     public AccessCheckResponse accessCheck(@RequestParam String userName,
                                            @RequestParam String projectName,
@@ -85,12 +90,14 @@ public class AuthController {
         return new AccessCheckResponse(accessCheckService.hasAccess(userName, projectName, normalizedPermission));
     }
 
+    /** Emails a time-limited password-reset link if the username/project/email match an account. */
     @PostMapping("/forgot-password")
     public ForgotPasswordResponse forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         log.info("POST /api/auth/forgot-password username={} project={}", request.username(), request.projectName());
         return passwordResetService.requestReset(request);
     }
 
+    /** Consumes a reset token from the emailed link and sets the new password. */
     @PostMapping("/reset-password")
     public void resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         log.info("POST /api/auth/reset-password token={}", request.token());

@@ -27,6 +27,7 @@ public class AccessRequestController {
         this.accessRequestService = accessRequestService;
     }
 
+    /** Submits a renewal or permission-change request for the caller (registration goes through /api/auth/register instead). */
     @PostMapping("/mine")
     public AccessRequestResponse createMyRequest(@AuthenticationPrincipal User user,
                                                    @Valid @RequestBody CreateAccessRequestRequest request) {
@@ -34,12 +35,14 @@ public class AccessRequestController {
         return AccessRequestResponse.from(accessRequestService.createRequest(user, request));
     }
 
+    /** Lists the caller's own past and pending requests. */
     @GetMapping("/mine")
     public List<AccessRequestResponse> myRequests(@AuthenticationPrincipal User user) {
         log.info("GET /api/access-requests/mine username={} project={}", user.getUsername(), user.getProjectName());
         return accessRequestService.myRequests(user).stream().map(AccessRequestResponse::from).toList();
     }
 
+    /** Lists pending requests this admin can act on (sent to them specifically, or to "any admin" in their project). */
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public List<AccessRequestResponse> listPending(@AuthenticationPrincipal User admin) {
@@ -47,6 +50,7 @@ public class AccessRequestController {
         return accessRequestService.listPending(admin).stream().map(AccessRequestResponse::from).toList();
     }
 
+    /** Approves a request: grants the requested (or admin-chosen) license and permissions. */
     @PostMapping("/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     public AccessRequestResponse approve(@PathVariable("id") Long id, @Valid @RequestBody ApproveAccessRequestRequest request,
@@ -55,6 +59,7 @@ public class AccessRequestController {
         return AccessRequestResponse.from(accessRequestService.approve(id, request, admin));
     }
 
+    /** Rejects a request with a reason; nothing is granted. */
     @PostMapping("/{id}/reject")
     @PreAuthorize("hasRole('ADMIN')")
     public AccessRequestResponse reject(@PathVariable("id") Long id, @RequestBody RejectAccessRequestRequest request,
