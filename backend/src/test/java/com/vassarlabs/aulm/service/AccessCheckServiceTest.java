@@ -24,7 +24,7 @@ class AccessCheckServiceTest {
         User user = userWithLicense(LicenseType.ADMIN, LocalDate.now().minusYears(10), EnumSet.of(PermissionType.ACCESS));
         Mockito.when(userRepository.findByUsernameAndProjectName("alice", "proj")).thenReturn(Optional.of(user));
 
-        assertThat(accessCheckService.hasAccess("alice", "proj", PermissionType.ACCESS)).isTrue();
+        assertThat(accessCheckService.checkAccess("alice", "proj", PermissionType.ACCESS)).isTrue();
     }
 
     @Test
@@ -32,7 +32,7 @@ class AccessCheckServiceTest {
         User user = userWithLicense(LicenseType.STANDARD, LocalDate.now().plusDays(1), EnumSet.of(PermissionType.ACCESS));
         Mockito.when(userRepository.findByUsernameAndProjectName("alice", "proj")).thenReturn(Optional.of(user));
 
-        assertThat(accessCheckService.hasAccess("alice", "proj", PermissionType.ACCESS)).isTrue();
+        assertThat(accessCheckService.checkAccess("alice", "proj", PermissionType.ACCESS)).isTrue();
     }
 
     @Test
@@ -40,7 +40,7 @@ class AccessCheckServiceTest {
         User user = userWithLicense(LicenseType.STANDARD, LocalDate.now().minusDays(1), EnumSet.of(PermissionType.ACCESS));
         Mockito.when(userRepository.findByUsernameAndProjectName("alice", "proj")).thenReturn(Optional.of(user));
 
-        assertThat(accessCheckService.hasAccess("alice", "proj", PermissionType.ACCESS)).isFalse();
+        assertThat(accessCheckService.checkAccess("alice", "proj", PermissionType.ACCESS)).isFalse();
     }
 
     @Test
@@ -48,7 +48,7 @@ class AccessCheckServiceTest {
         User user = userWithLicense(LicenseType.ADMIN, LocalDate.now().plusYears(1), EnumSet.of(PermissionType.MODIFY));
         Mockito.when(userRepository.findByUsernameAndProjectName("alice", "proj")).thenReturn(Optional.of(user));
 
-        assertThat(accessCheckService.hasAccess("alice", "proj", PermissionType.ACCESS)).isFalse();
+        assertThat(accessCheckService.checkAccess("alice", "proj", PermissionType.ACCESS)).isFalse();
     }
 
     private User userWithLicense(LicenseType licenseType, LocalDate expiryDate, EnumSet<PermissionType> permissions) {

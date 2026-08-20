@@ -47,8 +47,8 @@ public class UserService {
 
     /** Project-scoped admins only see their own project's users; superadmins see everyone. Not-yet-approved
      *  registrations are excluded here — they only show up under Pending Requests until resolved. */
-    public List<User> listUsers(User admin) {
-        log.info("listUsers username={} project={}", admin.getUsername(), admin.getProjectName());
+    public List<User> getUsers(User admin) {
+        log.info("getUsers username={} project={}", admin.getUsername(), admin.getProjectName());
         List<User> candidates = admin.isSuperAdmin()
                 ? userRepository.findAll()
                 : userRepository.findByProjectNameOrderByUsername(admin.getProjectName());

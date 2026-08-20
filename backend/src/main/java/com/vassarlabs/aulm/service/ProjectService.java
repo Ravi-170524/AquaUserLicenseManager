@@ -26,8 +26,8 @@ public class ProjectService {
         this.projectRepository = projectRepository;
     }
 
-    public List<ProjectResponse> listProjects() {
-        log.info("listProjects");
+    public List<ProjectResponse> getProjects() {
+        log.info("getProjects");
         return projectRepository.findAllByOrderByName().stream().map(ProjectResponse::from).toList();
     }
 

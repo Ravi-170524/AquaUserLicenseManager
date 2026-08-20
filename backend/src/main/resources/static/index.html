@@ -668,7 +668,7 @@
     const current = selectedValue !== undefined ? selectedValue : selectEl.value;
     selectEl.innerHTML = '<option value="">Select a project</option>';
     try {
-      const projects = await api('GET', '/api/projects');
+      const projects = await api('GET', '/api/projects/getProjects');
       for (const p of projects) {
         const opt = document.createElement('option');
         opt.value = p.name;
@@ -686,7 +686,7 @@
     selectEl.innerHTML = '<option value="" disabled selected>Select an admin</option>';
     if (!projectName) return;
     try {
-      const admins = await api('GET', '/api/auth/admins?projectName=' + encodeURIComponent(projectName));
+      const admins = await api('GET', '/api/auth/getAdmins?projectName=' + encodeURIComponent(projectName));
       for (const a of admins) {
         const opt = document.createElement('option');
         opt.value = a.id;
@@ -884,7 +884,7 @@
     $('my-access-error').textContent = '';
     $('my-access-status').innerHTML = 'Loading...';
     try {
-      myRequests = await api('GET', '/api/access-requests/mine');
+      myRequests = await api('GET', '/api/access-requests/getMyRequests');
       renderMyAccessStatus();
     } catch (e) {
       $('my-access-status').innerHTML = '';
@@ -930,7 +930,7 @@
 
   $('my-access-refresh').addEventListener('click', async () => {
     try {
-      currentUser = await api('GET', '/api/auth/me');
+      currentUser = await api('GET', '/api/auth/getMyProfile');
       await showMyAccess();
     } catch (e) {
       $('my-access-error').textContent = e.message;
@@ -973,7 +973,7 @@
 
     $('my-access-submit').disabled = true;
     try {
-      await api('POST', '/api/access-requests/mine', payload);
+      await api('POST', '/api/access-requests/createMyRequest', payload);
       await showMyAccess();
     } catch (e) {
       $('my-access-error').textContent = e.message;
@@ -1052,7 +1052,7 @@
     clearError();
     $('status-line').textContent = 'Loading...';
     try {
-      users = await api('GET', '/api/users');
+      users = await api('GET', '/api/users/getUsers');
       if (selectedId !== null && !users.some(u => u.id === selectedId)) selectedId = null;
       renderTable();
       updateToolbarState();
@@ -1156,7 +1156,7 @@
           customStartDate: $('uf-license-type').value === 'CUSTOM' ? $('uf-custom-start').value : null,
           customExpiryDate: $('uf-license-type').value === 'CUSTOM' ? $('uf-custom-end').value : null,
         };
-        const created = await api('POST', '/api/users', payload);
+        const created = await api('POST', '/api/users/createUser', payload);
         userDialog.close();
         $('status-line').textContent = 'Created user ' + created.username;
       } else {
@@ -1170,7 +1170,7 @@
           permissions,
           newPassword: password || null,
         };
-        const updated = await api('PUT', '/api/users/' + u.id, payload);
+        const updated = await api('PUT', '/api/users/' + u.id + '/updateUser', payload);
         userDialog.close();
         $('status-line').textContent = 'Updated user ' + updated.username;
       }
@@ -1189,7 +1189,7 @@
     if (!confirm(`Delete user '${u.username}' and revoke their license? This cannot be undone.`)) return;
     clearError();
     try {
-      await api('DELETE', '/api/users/' + u.id);
+      await api('DELETE', '/api/users/' + u.id + '/deleteUser');
       $('status-line').textContent = 'Deleted user ' + u.username;
       selectedId = null;
       await refresh();
@@ -1236,7 +1236,7 @@
     };
     $('renew-dialog-save').disabled = true;
     try {
-      const updated = await api('POST', '/api/users/' + u.id + '/license/renew', payload);
+      const updated = await api('POST', '/api/users/' + u.id + '/renewLicense', payload);
       renewDialog.close();
       $('status-line').textContent = 'Updated license for ' + updated.username;
       await refresh();
@@ -1261,7 +1261,7 @@
 
   async function loadPendingRequests() {
     try {
-      pendingRequests = await api('GET', '/api/access-requests');
+      pendingRequests = await api('GET', '/api/access-requests/getPendingRequests');
       renderRequestsTable();
       updateRequestsBtnLabel();
     } catch (e) {
@@ -1271,7 +1271,7 @@
 
   async function refreshPendingRequestsCount() {
     try {
-      pendingRequests = await api('GET', '/api/access-requests');
+      pendingRequests = await api('GET', '/api/access-requests/getPendingRequests');
       updateRequestsBtnLabel();
     } catch (e) {
       // Non-fatal — leave the label as-is if this fails.
@@ -1336,7 +1336,7 @@
     }
     triggerBtn.disabled = true;
     try {
-      await api('POST', '/api/access-requests/' + request.id + '/approve', payload);
+      await api('POST', '/api/access-requests/' + request.id + '/approveRequest', payload);
       await loadPendingRequests();
       await refresh();
       $('status-line').textContent = 'Approved request for ' + request.username;
@@ -1357,7 +1357,7 @@
     if (!rejectTarget) return;
     $('reject-request-save').disabled = true;
     try {
-      await api('POST', '/api/access-requests/' + rejectTarget.id + '/reject', { reason: $('rr-reason').value });
+      await api('POST', '/api/access-requests/' + rejectTarget.id + '/rejectRequest', { reason: $('rr-reason').value });
       rejectDialog.close();
       await loadPendingRequests();
       await refresh();
@@ -1384,7 +1384,7 @@
     const body = $('projects-table-body');
     body.innerHTML = '<tr><td colspan="2">Loading...</td></tr>';
     try {
-      const projects = await api('GET', '/api/projects');
+      const projects = await api('GET', '/api/projects/getProjects');
       body.innerHTML = '';
       for (const p of projects) {
         const tr = document.createElement('tr');
@@ -1407,7 +1407,7 @@
     if (!name) { $('projects-dialog-error').textContent = 'Project name is required.'; return; }
     $('add-project-button').disabled = true;
     try {
-      await api('POST', '/api/projects', { name });
+      await api('POST', '/api/projects/createProject', { name });
       $('new-project-name').value = '';
       await refreshProjectsTable();
     } catch (e) {

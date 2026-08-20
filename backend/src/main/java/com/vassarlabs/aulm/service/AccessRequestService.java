@@ -100,8 +100,8 @@ public class AccessRequestService {
         return user;
     }
 
-    public AccessRequest createRequest(User requester, CreateAccessRequestRequest request) {
-        log.info("createRequest username={} project={} type={}", requester.getUsername(), requester.getProjectName(), request.requestType());
+    public AccessRequest createMyRequest(User requester, CreateAccessRequestRequest request) {
+        log.info("createMyRequest username={} project={} type={}", requester.getUsername(), requester.getProjectName(), request.requestType());
         if (request.requestType() == AccessRequestType.REGISTRATION) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "Use the registration endpoint to create a new account");
         }
@@ -205,9 +205,9 @@ public class AccessRequestService {
     }
 
     /** Admin picker for registration/access requests: anyone holding an ADMIN-tier license in this project, plus AULM (the org-wide admin project). */
-    public List<AdminSummary> listAdmins(String projectName) {
+    public List<AdminSummary> getAdmins(String projectName) {
         String normalizedProjectName = InputNormalizer.lowerTrim(projectName);
-        log.info("listAdmins project={}", normalizedProjectName);
+        log.info("getAdmins project={}", normalizedProjectName);
         List<String> eligibleProjects = normalizedProjectName.equals(GLOBAL_ADMIN_PROJECT)
                 ? List.of(normalizedProjectName)
                 : List.of(normalizedProjectName, GLOBAL_ADMIN_PROJECT);
@@ -217,19 +217,19 @@ public class AccessRequestService {
                 .toList();
     }
 
-    public List<AccessRequest> myRequests(User user) {
-        log.info("myRequests username={} project={}", user.getUsername(), user.getProjectName());
+    public List<AccessRequest> getMyRequests(User user) {
+        log.info("getMyRequests username={} project={}", user.getUsername(), user.getProjectName());
         return accessRequestRepository.findByUserOrderByCreatedAtDesc(user);
     }
 
     /** Only requests sent to "any admin", or specifically to this admin, are visible to them. */
-    public List<AccessRequest> listPending(User admin) {
-        log.info("listPending username={} project={}", admin.getUsername(), admin.getProjectName());
+    public List<AccessRequest> getPendingRequests(User admin) {
+        log.info("getPendingRequests username={} project={}", admin.getUsername(), admin.getProjectName());
         return accessRequestRepository.findVisibleTo(AccessRequestStatus.PENDING, admin);
     }
 
-    public AccessRequest approve(Long id, ApproveAccessRequestRequest request, User admin) {
-        log.info("approve requestId={} admin={} project={}", id, admin.getUsername(), admin.getProjectName());
+    public AccessRequest approveRequest(Long id, ApproveAccessRequestRequest request, User admin) {
+        log.info("approveRequest requestId={} admin={} project={}", id, admin.getUsername(), admin.getProjectName());
         AccessRequest accessRequest = getPendingOrThrow(id);
         assertCanResolve(accessRequest, admin);
         User user = accessRequest.getUser();
@@ -279,8 +279,8 @@ public class AccessRequestService {
         return accessRequestRepository.save(accessRequest);
     }
 
-    public AccessRequest reject(Long id, RejectAccessRequestRequest request, User admin) {
-        log.info("reject requestId={} admin={} project={}", id, admin.getUsername(), admin.getProjectName());
+    public AccessRequest rejectRequest(Long id, RejectAccessRequestRequest request, User admin) {
+        log.info("rejectRequest requestId={} admin={} project={}", id, admin.getUsername(), admin.getProjectName());
         AccessRequest accessRequest = getPendingOrThrow(id);
         assertCanResolve(accessRequest, admin);
         accessRequest.setStatus(AccessRequestStatus.REJECTED);

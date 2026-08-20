@@ -51,11 +51,11 @@ public class PasswordResetService {
         this.appBaseUrl = appBaseUrl;
     }
 
-    public ForgotPasswordResponse requestReset(ForgotPasswordRequest request) {
+    public ForgotPasswordResponse forgotPassword(ForgotPasswordRequest request) {
         String username = InputNormalizer.lowerTrim(request.username());
         String projectName = InputNormalizer.lowerTrim(request.projectName());
         String email = InputNormalizer.lowerTrim(request.email());
-        log.info("requestReset username={} project={}", username, projectName);
+        log.info("forgotPassword username={} project={}", username, projectName);
         Optional<User> userOpt = userRepository.findByUsernameAndProjectName(username, projectName);
         User user = userOpt.orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST,
                 "No account found with that username, project, and email."));

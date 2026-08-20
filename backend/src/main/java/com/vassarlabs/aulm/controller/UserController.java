@@ -30,47 +30,47 @@ public class UserController {
     }
 
     /** Lists users in the admin's own project, or every project if the admin is also a superadmin. */
-    @GetMapping
-    public List<UserResponse> listUsers(@AuthenticationPrincipal User admin) {
-        log.info("GET /api/users username={} project={}", admin.getUsername(), admin.getProjectName());
-        return userService.listUsers(admin).stream().map(UserResponse::from).toList();
+    @GetMapping("/getUsers")
+    public List<UserResponse> getUsers(@AuthenticationPrincipal User admin) {
+        log.info("GET /api/users/getUsers username={} project={}", admin.getUsername(), admin.getProjectName());
+        return userService.getUsers(admin).stream().map(UserResponse::from).toList();
     }
 
     /** Fetches a single user by id. */
-    @GetMapping("/{id}")
+    @GetMapping("/{id}/getUser")
     public UserResponse getUser(@PathVariable("id") Long id) {
-        log.info("GET /api/users/{}", id);
+        log.info("GET /api/users/{}/getUser", id);
         return UserResponse.from(userService.getUser(id));
     }
 
     /** Admin-created user + license, applied immediately (skips the request/approval flow). */
-    @PostMapping
+    @PostMapping("/createUser")
     @ResponseStatus(HttpStatus.CREATED)
     public UserResponse createUser(@Valid @RequestBody CreateUserRequest request) {
-        log.info("POST /api/users username={} project={}", request.username(), request.projectName());
+        log.info("POST /api/users/createUser username={} project={}", request.username(), request.projectName());
         User user = userService.createUser(request);
         return UserResponse.from(user);
     }
 
     /** Updates profile fields, permissions, admin flag, enabled flag, and/or password. */
-    @PutMapping("/{id}")
+    @PutMapping("/{id}/updateUser")
     public UserResponse updateUser(@PathVariable("id") Long id, @Valid @RequestBody UpdateUserRequest request) {
-        log.info("PUT /api/users/{}", id);
+        log.info("PUT /api/users/{}/updateUser", id);
         return UserResponse.from(userService.updateUser(id, request));
     }
 
     /** Deletes a user (refuses to delete the last remaining admin). */
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id}/deleteUser")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable("id") Long id) {
-        log.info("DELETE /api/users/{}", id);
+        log.info("DELETE /api/users/{}/deleteUser", id);
         userService.deleteUser(id);
     }
 
     /** Changes a user's license type/expiry, or revokes it. */
-    @PostMapping("/{id}/license/renew")
+    @PostMapping("/{id}/renewLicense")
     public UserResponse renewLicense(@PathVariable("id") Long id, @Valid @RequestBody RenewLicenseRequest request) {
-        log.info("POST /api/users/{}/license/renew type={}", id, request.licenseType());
+        log.info("POST /api/users/{}/renewLicense type={}", id, request.licenseType());
         return UserResponse.from(userService.renewLicense(id, request));
     }
 }

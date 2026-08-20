@@ -28,43 +28,43 @@ public class AccessRequestController {
     }
 
     /** Submits a renewal or permission-change request for the caller (registration goes through /api/auth/register instead). */
-    @PostMapping("/mine")
+    @PostMapping("/createMyRequest")
     public AccessRequestResponse createMyRequest(@AuthenticationPrincipal User user,
                                                    @Valid @RequestBody CreateAccessRequestRequest request) {
-        log.info("POST /api/access-requests/mine username={} project={} type={}", user.getUsername(), user.getProjectName(), request.requestType());
-        return AccessRequestResponse.from(accessRequestService.createRequest(user, request));
+        log.info("POST /api/access-requests/createMyRequest username={} project={} type={}", user.getUsername(), user.getProjectName(), request.requestType());
+        return AccessRequestResponse.from(accessRequestService.createMyRequest(user, request));
     }
 
     /** Lists the caller's own past and pending requests. */
-    @GetMapping("/mine")
-    public List<AccessRequestResponse> myRequests(@AuthenticationPrincipal User user) {
-        log.info("GET /api/access-requests/mine username={} project={}", user.getUsername(), user.getProjectName());
-        return accessRequestService.myRequests(user).stream().map(AccessRequestResponse::from).toList();
+    @GetMapping("/getMyRequests")
+    public List<AccessRequestResponse> getMyRequests(@AuthenticationPrincipal User user) {
+        log.info("GET /api/access-requests/getMyRequests username={} project={}", user.getUsername(), user.getProjectName());
+        return accessRequestService.getMyRequests(user).stream().map(AccessRequestResponse::from).toList();
     }
 
     /** Lists pending requests this admin can act on (sent to them specifically, or to "any admin" in their project). */
-    @GetMapping
+    @GetMapping("/getPendingRequests")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<AccessRequestResponse> listPending(@AuthenticationPrincipal User admin) {
-        log.info("GET /api/access-requests username={} project={}", admin.getUsername(), admin.getProjectName());
-        return accessRequestService.listPending(admin).stream().map(AccessRequestResponse::from).toList();
+    public List<AccessRequestResponse> getPendingRequests(@AuthenticationPrincipal User admin) {
+        log.info("GET /api/access-requests/getPendingRequests username={} project={}", admin.getUsername(), admin.getProjectName());
+        return accessRequestService.getPendingRequests(admin).stream().map(AccessRequestResponse::from).toList();
     }
 
     /** Approves a request: grants the requested (or admin-chosen) license and permissions. */
-    @PostMapping("/{id}/approve")
+    @PostMapping("/{id}/approveRequest")
     @PreAuthorize("hasRole('ADMIN')")
-    public AccessRequestResponse approve(@PathVariable("id") Long id, @Valid @RequestBody ApproveAccessRequestRequest request,
+    public AccessRequestResponse approveRequest(@PathVariable("id") Long id, @Valid @RequestBody ApproveAccessRequestRequest request,
                                           @AuthenticationPrincipal User admin) {
-        log.info("POST /api/access-requests/{}/approve username={} project={}", id, admin.getUsername(), admin.getProjectName());
-        return AccessRequestResponse.from(accessRequestService.approve(id, request, admin));
+        log.info("POST /api/access-requests/{}/approveRequest username={} project={}", id, admin.getUsername(), admin.getProjectName());
+        return AccessRequestResponse.from(accessRequestService.approveRequest(id, request, admin));
     }
 
     /** Rejects a request with a reason; nothing is granted. */
-    @PostMapping("/{id}/reject")
+    @PostMapping("/{id}/rejectRequest")
     @PreAuthorize("hasRole('ADMIN')")
-    public AccessRequestResponse reject(@PathVariable("id") Long id, @RequestBody RejectAccessRequestRequest request,
+    public AccessRequestResponse rejectRequest(@PathVariable("id") Long id, @RequestBody RejectAccessRequestRequest request,
                                          @AuthenticationPrincipal User admin) {
-        log.info("POST /api/access-requests/{}/reject username={} project={}", id, admin.getUsername(), admin.getProjectName());
-        return AccessRequestResponse.from(accessRequestService.reject(id, request, admin));
+        log.info("POST /api/access-requests/{}/rejectRequest username={} project={}", id, admin.getUsername(), admin.getProjectName());
+        return AccessRequestResponse.from(accessRequestService.rejectRequest(id, request, admin));
     }
 }

@@ -67,34 +67,38 @@ public class AuthController {
     }
 
     /** Returns the currently authenticated user's own profile. */
-    @GetMapping("/me")
-    public UserResponse me(@AuthenticationPrincipal User user) {
-        log.info("GET /api/auth/me username={} project={}", user.getUsername(), user.getProjectName());
+    @GetMapping("/getMyProfile")
+    public UserResponse getMyProfile(@AuthenticationPrincipal User user) {
+        log.info("GET /api/auth/getMyProfile username={} project={}", user.getUsername(), user.getProjectName());
         return UserResponse.from(user);
     }
 
     /** Lists admins eligible to receive an access request for a project, for the "send request to" picker. */
-    @GetMapping("/admins")
-    public List<AdminSummary> admins(@RequestParam String projectName) {
-        log.info("GET /api/auth/admins project={}", projectName);
-        return accessRequestService.listAdmins(projectName);
+    @GetMapping("/getAdmins")
+    public List<AdminSummary> getAdmins(@RequestParam String projectName) {
+        log.info("GET /api/auth/getAdmins project={}", projectName);
+        return accessRequestService.getAdmins(projectName);
     }
 
-    /** Read-only check other systems call to ask "can this user do X in this project?". */
+    /**
+     * Read-only check other systems call to ask "can this user do X in this project?".
+     * Path intentionally left as /access-check (not renamed) — external systems outside this
+     * codebase call it by this exact URL; renaming would break them silently.
+     */
     @GetMapping("/access-check")
-    public AccessCheckResponse accessCheck(@RequestParam String userName,
+    public AccessCheckResponse checkAccess(@RequestParam String userName,
                                            @RequestParam String projectName,
                                            @RequestParam String permissionType) {
         PermissionType normalizedPermission = PermissionType.valueOf(permissionType.trim().toUpperCase(Locale.ROOT));
         log.info("GET /api/auth/access-check username={} project={} permission={}", userName, projectName, normalizedPermission);
-        return new AccessCheckResponse(accessCheckService.hasAccess(userName, projectName, normalizedPermission));
+        return new AccessCheckResponse(accessCheckService.checkAccess(userName, projectName, normalizedPermission));
     }
 
     /** Emails a time-limited password-reset link if the username/project/email match an account. */
     @PostMapping("/forgot-password")
     public ForgotPasswordResponse forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
         log.info("POST /api/auth/forgot-password username={} project={}", request.username(), request.projectName());
-        return passwordResetService.requestReset(request);
+        return passwordResetService.forgotPassword(request);
     }
 
     /** Consumes a reset token from the emailed link and sets the new password. */

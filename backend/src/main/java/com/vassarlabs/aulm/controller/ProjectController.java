@@ -25,18 +25,18 @@ public class ProjectController {
     }
 
     /** Lists all projects — used to populate the project pickers on login/register/forgot-password. */
-    @GetMapping
-    public List<ProjectResponse> list() {
-        log.info("GET /api/projects");
-        return projectService.listProjects();
+    @GetMapping("/getProjects")
+    public List<ProjectResponse> getProjects() {
+        log.info("GET /api/projects/getProjects");
+        return projectService.getProjects();
     }
 
     /** Creates a new project (superadmin only). */
-    @PostMapping
+    @PostMapping("/createProject")
     @PreAuthorize("hasRole('SUPERADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
-    public ProjectResponse create(@Valid @RequestBody CreateProjectRequest request) {
-        log.info("POST /api/projects name={}", request.name());
+    public ProjectResponse createProject(@Valid @RequestBody CreateProjectRequest request) {
+        log.info("POST /api/projects/createProject name={}", request.name());
         return projectService.createProject(request);
     }
 }

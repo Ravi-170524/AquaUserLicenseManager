@@ -23,10 +23,10 @@ public class AccessCheckService {
         this.userRepository = userRepository;
     }
 
-    public boolean hasAccess(String userName, String projectName, PermissionType permissionType) {
+    public boolean checkAccess(String userName, String projectName, PermissionType permissionType) {
         String normalizedUser = InputNormalizer.lowerTrim(userName);
         String normalizedProject = InputNormalizer.lowerTrim(projectName);
-        log.info("hasAccess username={} project={} permission={}", normalizedUser, normalizedProject, permissionType);
+        log.info("checkAccess username={} project={} permission={}", normalizedUser, normalizedProject, permissionType);
         return userRepository.findByUsernameAndProjectName(normalizedUser, normalizedProject)
                 .filter(User::isEnabled)
                 .filter(user -> user.getPermissions() != null && user.getPermissions().contains(permissionType))
